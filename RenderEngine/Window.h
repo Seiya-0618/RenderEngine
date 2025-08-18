@@ -10,6 +10,7 @@ public:
 	Window(uint32_t width, uint32_t height);
 	~Window();
 	void Show();
+	void MessageLoop();
 	HWND GetHwnd();
 
 private:

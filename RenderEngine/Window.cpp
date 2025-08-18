@@ -81,6 +81,19 @@ void Window::Show()
 	}
 }
 
+void Window::MessageLoop()
+{
+	MSG msg = {};
+	while (WM_QUIT != msg.message)
+	{
+		if (PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE) == TRUE)
+		{
+			TranslateMessage(&msg);
+			DispatchMessage(&msg);
+		}
+	}
+}
+
 void Window::TermWnd()
 {
 	if (m_hInst != nullptr)

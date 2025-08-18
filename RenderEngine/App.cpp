@@ -38,13 +38,5 @@ void App::TermApp()
 
 void App::MainLoop()
 {
-	MSG msg = {};
-	while (WM_QUIT != msg.message)
-	{
-		if (PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE) == TRUE)
-		{
-			TranslateMessage(&msg);
-			DispatchMessage(&msg);
-		}
-	}
+	m_window->MessageLoop();
 }
