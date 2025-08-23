@@ -68,6 +68,7 @@ bool Window::InitWnd()
 	{
 		return false;
 	}
+	msg = {};
 		
 }
 
@@ -81,18 +82,25 @@ void Window::Show()
 	}
 }
 
-void Window::MessageLoop()
+bool Window::MessageLoop()
 {
-	MSG msg = {};
-	while (WM_QUIT != msg.message)
+	if (PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE) == TRUE)
 	{
-		if (PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE) == TRUE)
-		{
-			TranslateMessage(&msg);
-			DispatchMessage(&msg);
-		}
+		TranslateMessage(&msg);
+		DispatchMessage(&msg);
+		return true;
+	}
+	else {
+		return false;
 	}
 }
+
+bool Window::CheckMessage()
+{
+	bool result = WM_QUIT != msg.message;
+	return result;
+}
+
 
 void Window::TermWnd()
 {

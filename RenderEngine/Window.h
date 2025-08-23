@@ -10,7 +10,8 @@ public:
 	Window(uint32_t width, uint32_t height);
 	~Window();
 	void Show();
-	void MessageLoop();
+	bool MessageLoop();
+	bool CheckMessage();
 	HWND GetHwnd();
 
 private:
@@ -18,6 +19,7 @@ private:
 	HWND m_hwnd;
 	uint32_t m_width;
 	uint32_t m_height;
+	MSG msg;
 
 
 	bool InitWnd();
