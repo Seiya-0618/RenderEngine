@@ -21,7 +21,12 @@ DXRenderer::DXRenderer()
 	m_pCmdAllocator{},
 	m_pCmdList(nullptr),
 	m_pHeapRTV(nullptr),
-	m_pFence(nullptr)
+	m_pFence(nullptr),
+	m_pHeapCBV(nullptr),
+	m_pVB(nullptr),
+	m_pCB{},
+	m_pRootSignature(nullptr),
+	m_pPSO(nullptr)
 {
 	/* Do Nothing */
 }
