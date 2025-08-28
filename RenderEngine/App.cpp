@@ -8,7 +8,7 @@ App::App(uint32_t width, uint32_t height)
 	m_height(height)
 {
 	m_window = new Window(m_width, m_height);
-	m_renderer = new DXRenderer();
+	m_renderer = new DXRenderer(m_width, m_height);
 }
 
 App::~App()
@@ -33,7 +33,8 @@ bool App::InitApp()
 		return false;
 	}
 	m_window->Show();
-	m_renderer->InitD3D(m_window->GetHwnd(), m_width, m_height);
+	m_renderer->InitD3D(m_window->GetHwnd());
+	m_renderer->OnInit();
 
 	return true;
 }

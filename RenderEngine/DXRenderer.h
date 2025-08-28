@@ -6,9 +6,11 @@
 #include <dxgi1_4.h>
 #include <wrl/client.h>
 #include <DirectXMath.h>
+#include <d3dcompiler.h>
 
 #pragma comment(lib, "d3d12.lib")
 #pragma comment(lib, "dxgi.lib")
+#pragma comment(lib, "d3dcompiler.lib")
 
 template<typename T> using ComPtr = Microsoft::WRL::ComPtr<T>;
 
@@ -16,7 +18,7 @@ struct alignas(256) Transform
 {
 	DirectX::XMMATRIX World;
 	DirectX::XMMATRIX View;
-	DirectX::XMMATRIX Proj;
+	DirectX::XMMATRIX Projection;
 };
 
 template<typename T> struct ConstantBufferView
@@ -30,9 +32,10 @@ template<typename T> struct ConstantBufferView
 class DXRenderer
 {
 public:
-	DXRenderer();
+	DXRenderer(uint32_t width, uint32_t height);
 	~DXRenderer();
-	bool InitD3D(HWND hwnd, uint32_t width, uint32_t height);
+	bool InitD3D(HWND hwnd);
+	bool OnInit();
 	void Render();
 	void TermD3D();
 	void WaitGpu();
@@ -51,8 +54,8 @@ private:
 	ComPtr<ID3D12DescriptorHeap> m_pHeapRTV;
 	ComPtr<ID3D12Fence> m_pFence;
 	ComPtr<ID3D12DescriptorHeap> m_pHeapCBV;
-	ComPtr<ID3D12Resource> m_pVB;
-	ComPtr<ID3D12Resource> m_pCB[FrameCount];
+	ComPtr<ID3D12Resource> m_pVB;              //頂点バッファ
+	ComPtr<ID3D12Resource> m_pCB[FrameCount];  //定数バッファ
 	ComPtr<ID3D12RootSignature> m_pRootSignature;
 	ComPtr<ID3D12PipelineState> m_pPSO;
 
@@ -65,5 +68,7 @@ private:
 	D3D12_RECT m_Scissor;
 	ConstantBufferView<Transform> m_CBV[FrameCount];
 	float m_RotateAngle;
+	uint32_t m_Width;
+	uint32_t m_Height;
 
 };
