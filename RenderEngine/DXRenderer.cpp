@@ -181,6 +181,76 @@ bool DXRenderer::InitD3D(HWND hwnd)
 		}
 	}
 
+	{//Create Stencil and Depth Buffer
+		D3D12_HEAP_PROPERTIES stencilProps = {};
+		stencilProps.Type = D3D12_HEAP_TYPE_DEFAULT;
+		stencilProps.CPUPageProperty = D3D12_CPU_PAGE_PROPERTY_UNKNOWN;
+		stencilProps.MemoryPoolPreference = D3D12_MEMORY_POOL_UNKNOWN;
+		stencilProps.CreationNodeMask = 1;
+		stencilProps.VisibleNodeMask = 1;
+
+		D3D12_RESOURCE_DESC stencilDesc = {};
+		stencilDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
+		stencilDesc.Alignment = 0;
+		stencilDesc.Width = m_Width;
+		stencilDesc.Height = m_Height;
+		stencilDesc.DepthOrArraySize = 1;
+		stencilDesc.MipLevels = 1;
+		stencilDesc.Format = DXGI_FORMAT_D32_FLOAT;
+		stencilDesc.SampleDesc.Count = 1;
+		stencilDesc.SampleDesc.Quality = 0;
+		stencilDesc.Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;
+		stencilDesc.Flags = D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL;
+
+		D3D12_CLEAR_VALUE clearValue = {};
+		clearValue.Format = DXGI_FORMAT_D32_FLOAT;
+		clearValue.DepthStencil.Depth = 1.0f;
+		clearValue.DepthStencil.Stencil = 0;
+
+		hr = m_pDevice->CreateCommittedResource(
+			&stencilProps,
+			D3D12_HEAP_FLAG_NONE,
+			&stencilDesc,
+			D3D12_RESOURCE_STATE_DEPTH_WRITE,
+			&clearValue,
+			IID_PPV_ARGS(m_pDepthBuffer.GetAddressOf()));;
+		if (FAILED(hr))
+		{
+			std::cout << "Failed to create depth stencil buffer." << std::endl;
+			return false;
+		}
+
+		D3D12_DESCRIPTOR_HEAP_DESC heapDesc = {};
+		heapDesc.NumDescriptors = 1;
+		heapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_DSV;
+		heapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
+		heapDesc.NodeMask = 0;
+
+		hr = m_pDevice->CreateDescriptorHeap(
+			&heapDesc,
+			IID_PPV_ARGS(m_pHeapDSV.GetAddressOf()));
+		if (FAILED(hr))
+		{
+			std::cout << "Failed to create DSV descriptor heap." << std::endl;
+			return false;
+		}
+
+		auto handle = m_pHeapDSV->GetCPUDescriptorHandleForHeapStart();
+		auto incrementSize = m_pDevice->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_DSV);
+
+		D3D12_DEPTH_STENCIL_VIEW_DESC viewDesc = {};
+		viewDesc.Format = DXGI_FORMAT_D32_FLOAT;
+		viewDesc.ViewDimension = D3D12_DSV_DIMENSION_TEXTURE2D;
+		viewDesc.Texture2D.MipSlice = 0;
+		viewDesc.Flags = D3D12_DSV_FLAG_NONE;
+
+		m_pDevice->CreateDepthStencilView(
+			m_pDepthBuffer.Get(),
+			&viewDesc,
+			handle);
+		m_HandleDSV = handle;
+	}
+
 	{
 		for (auto i = 0u; i < FrameCount; ++i)
 		{
@@ -349,9 +419,16 @@ bool DXRenderer::OnInit()
 			m_CBV[i].pBuffer->View = DirectX::XMMatrixLookAtRH(eyePos, targetPos, upward);
 			m_CBV[i].pBuffer->Projection = DirectX::XMMatrixPerspectiveFovRH(fovY, aspect, 1.0f, 100.0f);
 		}
-
-
 	}
+
+	
+		//Create Depth Stencil State
+		D3D12_DEPTH_STENCIL_DESC depthDesc = {};
+		depthDesc.DepthEnable = TRUE;
+		depthDesc.DepthWriteMask = D3D12_DEPTH_WRITE_MASK_ALL;
+		depthDesc.DepthFunc = D3D12_COMPARISON_FUNC_LESS;
+		depthDesc.StencilEnable = FALSE;
+	
 
 	{
 		auto flag = D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT;
@@ -474,13 +551,14 @@ bool DXRenderer::OnInit()
 		descPSO.PS = { pPSBlob->GetBufferPointer(), pPSBlob->GetBufferSize() };
 		descPSO.RasterizerState = rastDesc;
 		descPSO.BlendState = descBS;
-		descPSO.DepthStencilState.DepthEnable = FALSE;
+		descPSO.DepthStencilState = depthDesc;
+		descPSO.DepthStencilState.DepthEnable = TRUE;
 		descPSO.DepthStencilState.StencilEnable = FALSE;
 		descPSO.SampleMask = UINT_MAX;
 		descPSO.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
 		descPSO.NumRenderTargets = 1;
 		descPSO.RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM_SRGB;
-		descPSO.DSVFormat = DXGI_FORMAT_UNKNOWN;
+		descPSO.DSVFormat = DXGI_FORMAT_D32_FLOAT;
 		descPSO.SampleDesc.Count = 1;
 		descPSO.SampleDesc.Quality = 0;
 
@@ -529,10 +607,12 @@ void DXRenderer::Render()
 	barrier.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
 
 	m_pCmdList->ResourceBarrier(1, &barrier);
-	m_pCmdList->OMSetRenderTargets(1, &m_HandleRTV[m_FrameIndex], FALSE, nullptr);
+	m_pCmdList->OMSetRenderTargets(1, &m_HandleRTV[m_FrameIndex], FALSE, &m_HandleDSV);
 
 	float clearColor[] = { 0.25f, 0.25f, 0.75f, 1.0f };
 	m_pCmdList->ClearRenderTargetView(m_HandleRTV[m_FrameIndex], clearColor, 0, nullptr);
+	m_pCmdList->ClearDepthStencilView(m_HandleDSV, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
+
 	{
 		//Polygon lender process
 		m_pCmdList->SetGraphicsRootSignature(m_pRootSignature.Get());

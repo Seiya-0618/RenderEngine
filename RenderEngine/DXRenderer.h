@@ -49,6 +49,8 @@ private:
 	ComPtr<ID3D12CommandQueue> m_pQueue;
 	ComPtr<IDXGISwapChain3> m_pSwapChain;
 	ComPtr<ID3D12Resource> m_pColorBuffer[FrameCount];
+	ComPtr<ID3D12Resource> m_pDepthBuffer;
+	ComPtr<ID3D12DescriptorHeap> m_pHeapDSV;
 	ComPtr<ID3D12CommandAllocator> m_pCmdAllocator[FrameCount];
 	ComPtr<ID3D12GraphicsCommandList> m_pCmdList;
 	ComPtr<ID3D12DescriptorHeap> m_pHeapRTV;
@@ -63,6 +65,7 @@ private:
 	uint64_t m_FenceCounter[FrameCount];
 	uint32_t m_FrameIndex;
 	D3D12_CPU_DESCRIPTOR_HANDLE m_HandleRTV[FrameCount];
+	D3D12_CPU_DESCRIPTOR_HANDLE m_HandleDSV;
 	D3D12_VERTEX_BUFFER_VIEW m_VBV;
 	D3D12_VIEWPORT m_Viewport;
 	D3D12_RECT m_Scissor;
