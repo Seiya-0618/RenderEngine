@@ -1,6 +1,7 @@
 #include "DXRenderer.h"
 #include <iostream>
 #include <cassert>
+#include <memory>
 
 
 template<typename T>
@@ -13,11 +14,6 @@ void SafeRelease(T*& ptr)
 	}
 }
 
-struct Vertex
-{
-	DirectX::XMFLOAT3 Position;
-	DirectX::XMFLOAT4 Color;
-};
 
 DXRenderer::DXRenderer(uint32_t width, uint32_t height)
 	:m_pDevice(nullptr),
@@ -281,6 +277,8 @@ bool DXRenderer::InitD3D(HWND hwnd)
 bool DXRenderer::OnInit()
 {
 	{
+		/*
+
 		Vertex vertices[] = {
 			{DirectX::XMFLOAT3(-1.0f, -1.0f, 0.0f), DirectX::XMFLOAT4(0.0f, 0.0f, 1.0f, 1.0f)},
 			{DirectX::XMFLOAT3(1.0f, -1.0f, 0.0f), DirectX::XMFLOAT4(0.0f, 1.0f, 0.0f, 1.0f)},
@@ -336,6 +334,11 @@ bool DXRenderer::OnInit()
 		m_VBV.BufferLocation = m_pVB->GetGPUVirtualAddress();
 		m_VBV.SizeInBytes = static_cast<UINT>(sizeof(vertices));
 		m_VBV.StrideInBytes = static_cast<UINT>(sizeof(Vertex));
+		*/
+		Object* square = new Object();
+		square->AddMesh(squareMesh, m_pDevice.Get());
+		m_Objects.push_back(square);
+		std::cout << m_Objects.size() << std::endl;
 	}
 
 	{
@@ -621,11 +624,12 @@ void DXRenderer::Render()
 		m_pCmdList->SetPipelineState(m_pPSO.Get());
 
 		m_pCmdList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-		m_pCmdList->IASetVertexBuffers(0, 1, &m_VBV);
+		m_pCmdList->IASetVertexBuffers(0, 1, &m_Objects[0]->vertexBuffers[0].view);
+		m_pCmdList->IASetIndexBuffer(&m_Objects[0]->indexBuffers[0].view);
 		m_pCmdList->RSSetViewports(1, &m_Viewport);
 		m_pCmdList->RSSetScissorRects(1, &m_Scissor);
 
-		m_pCmdList->DrawInstanced(3, 1, 0, 0);
+		m_pCmdList->DrawIndexedInstanced(6, 1, 0, 0, 0);
 	}
 
 	barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;

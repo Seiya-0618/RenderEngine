@@ -130,11 +130,14 @@
     <ClCompile Include="App.cpp" />
     <ClCompile Include="DXRenderer.cpp" />
     <ClCompile Include="Main.cpp" />
+    <ClCompile Include="Object_win.cpp" />
     <ClCompile Include="Window.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="App.h" />
+    <ClInclude Include="DXMaterial.h" />
     <ClInclude Include="DXRenderer.h" />
+    <ClInclude Include="Object_win.h" />
     <ClInclude Include="Window.h" />
   </ItemGroup>
   <ItemGroup>
