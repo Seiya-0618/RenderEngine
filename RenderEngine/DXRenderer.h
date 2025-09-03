@@ -14,7 +14,7 @@
 #pragma comment(lib, "d3dcompiler.lib")
 
 template<typename T> using ComPtr = Microsoft::WRL::ComPtr<T>;
-
+/*
 struct alignas(256) Transform
 {
 	DirectX::XMMATRIX World;
@@ -29,6 +29,7 @@ template<typename T> struct ConstantBufferView
 	D3D12_GPU_DESCRIPTOR_HANDLE HandleGPU;
 	T* pBuffer;
 };
+*/
 
 class DXRenderer
 {

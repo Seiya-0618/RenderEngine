@@ -277,152 +277,13 @@ bool DXRenderer::InitD3D(HWND hwnd)
 bool DXRenderer::OnInit()
 {
 	{
-		/*
-
-		Vertex vertices[] = {
-			{DirectX::XMFLOAT3(-1.0f, -1.0f, 0.0f), DirectX::XMFLOAT4(0.0f, 0.0f, 1.0f, 1.0f)},
-			{DirectX::XMFLOAT3(1.0f, -1.0f, 0.0f), DirectX::XMFLOAT4(0.0f, 1.0f, 0.0f, 1.0f)},
-			{DirectX::XMFLOAT3(0.0f, 1.0f, 0.0f), DirectX::XMFLOAT4(1.0f, 0.0f, 0.0f, 1.0f)},
-		};
-
-		D3D12_HEAP_PROPERTIES heapProps = {};
-		heapProps.Type = D3D12_HEAP_TYPE_UPLOAD;
-		heapProps.CPUPageProperty = D3D12_CPU_PAGE_PROPERTY_UNKNOWN;
-		heapProps.MemoryPoolPreference = D3D12_MEMORY_POOL_UNKNOWN;
-		heapProps.CreationNodeMask = 1;
-		heapProps.VisibleNodeMask = 1;
-
-		D3D12_RESOURCE_DESC resDesc = {};
-		resDesc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
-		resDesc.Alignment = 0;
-		resDesc.Width = sizeof(vertices);
-		resDesc.Height = 1;
-		resDesc.DepthOrArraySize = 1;
-		resDesc.MipLevels = 1;
-		resDesc.Format = DXGI_FORMAT_UNKNOWN;
-		resDesc.SampleDesc.Count = 1;
-		resDesc.SampleDesc.Quality = 0;
-		resDesc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
-		resDesc.Flags = D3D12_RESOURCE_FLAG_NONE;
-
-		auto hr = m_pDevice->CreateCommittedResource(
-			&heapProps,
-			D3D12_HEAP_FLAG_NONE,
-			&resDesc,
-			D3D12_RESOURCE_STATE_GENERIC_READ,
-			nullptr,
-			IID_PPV_ARGS(m_pVB.GetAddressOf()));
-		if (FAILED(hr))
-		{
-			std::cout << "Failed to create vertex buffer.HRESULT: 0x" << std::hex << hr << std::endl;
-			return false;
-		}
-
-		void* ptr = nullptr;
-		hr = m_pVB->Map(0, nullptr, &ptr);
-		if (FAILED(hr))
-		{
-			std::cout << "Failed to map vertex buffer." << std::endl;
-			return false;
-		}
-
-		memcpy(ptr, vertices, sizeof(vertices));
-
-		m_pVB->Unmap(0, nullptr);
-
-
-		m_VBV.BufferLocation = m_pVB->GetGPUVirtualAddress();
-		m_VBV.SizeInBytes = static_cast<UINT>(sizeof(vertices));
-		m_VBV.StrideInBytes = static_cast<UINT>(sizeof(Vertex));
-		*/
-		Object* square = new Object();
+		//Load Mesh
+		Object* square = new Object(m_Width, m_Height);
 		square->AddMesh(squareMesh, m_pDevice.Get());
 		m_Objects.push_back(square);
 		std::cout << m_Objects.size() << std::endl;
 	}
-
-	{
-		D3D12_DESCRIPTOR_HEAP_DESC heapDesc = {};
-		heapDesc.NumDescriptors = 1 * FrameCount;
-		heapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
-		heapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
-		heapDesc.NodeMask = 0;
-
-		auto hr = m_pDevice->CreateDescriptorHeap(&heapDesc, IID_PPV_ARGS(m_pHeapCBV.GetAddressOf()));
-		if (FAILED(hr))
-		{
-			std::cout << "Failed to create CBV descriptor heap." << std::hex << hr <<  std::endl;
-			return false;
-		}
-	}
-
-	{
-		D3D12_HEAP_PROPERTIES heapprops = {};
-		heapprops.Type = D3D12_HEAP_TYPE_UPLOAD;
-		heapprops.CPUPageProperty = D3D12_CPU_PAGE_PROPERTY_UNKNOWN;
-		heapprops.MemoryPoolPreference = D3D12_MEMORY_POOL_UNKNOWN;
-		heapprops.CreationNodeMask = 1;
-		heapprops.VisibleNodeMask = 1;
-
-		D3D12_RESOURCE_DESC resDesc = {};
-		resDesc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
-		resDesc.Alignment = 0;
-		resDesc.Width = sizeof(Transform);
-		resDesc.Height = 1;
-		resDesc.DepthOrArraySize = 1;
-		resDesc.MipLevels = 1;
-		resDesc.Format = DXGI_FORMAT_UNKNOWN;
-		resDesc.SampleDesc.Count = 1;
-		resDesc.SampleDesc.Quality = 0;
-		resDesc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
-		resDesc.Flags = D3D12_RESOURCE_FLAG_NONE;
-		
-		auto incrementSize = m_pDevice->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
-		for (auto i = 0; i < FrameCount; ++i)
-		{
-			auto hr = m_pDevice->CreateCommittedResource(
-				&heapprops,
-				D3D12_HEAP_FLAG_NONE,
-				&resDesc,
-				D3D12_RESOURCE_STATE_GENERIC_READ,
-				nullptr,
-				IID_PPV_ARGS(m_pCB[i].GetAddressOf()));
-			if (FAILED(hr))
-			{
-				std::cout << "Failed to create constant buffer. HResult : 0x" << std::endl;
-				return false;
-			}
-			auto address = m_pCB[i]->GetGPUVirtualAddress();
-			auto handleCPU = m_pHeapCBV->GetCPUDescriptorHandleForHeapStart();
-			auto handleGPU = m_pHeapCBV->GetGPUDescriptorHandleForHeapStart();
-			handleCPU.ptr += i * incrementSize;
-			handleGPU.ptr += i * incrementSize;
-
-			m_CBV[i].HandleCPU = handleCPU;
-			m_CBV[i].HandleGPU = handleGPU;
-			m_CBV[i].Desc.BufferLocation = address;
-			m_CBV[i].Desc.SizeInBytes = sizeof(Transform);
-
-			m_pDevice->CreateConstantBufferView(&m_CBV[i].Desc, handleCPU);
-			hr = m_pCB[i]->Map(0, nullptr, reinterpret_cast<void**>(&m_CBV[i].pBuffer));
-			if (FAILED(hr))
-			{
-				std::cout << "Failed to map constant buffer." << std::endl;
-				return false;
-			}
-
-			auto eyePos = DirectX::XMVectorSet(0.0f, 0.0f, 5.0f, 0.0f);
-			auto targetPos = DirectX::XMVectorZero();
-			auto upward = DirectX::XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);
-
-			auto fovY = DirectX::XMConvertToRadians(37.5f);
-			auto aspect = static_cast<float>(m_Width) / static_cast<float>(m_Height);			std::cout << "Aspect: " << aspect << std::endl;
-
-			m_CBV[i].pBuffer->World = DirectX::XMMatrixIdentity();
-			m_CBV[i].pBuffer->View = DirectX::XMMatrixLookAtRH(eyePos, targetPos, upward);
-			m_CBV[i].pBuffer->Projection = DirectX::XMMatrixPerspectiveFovRH(fovY, aspect, 1.0f, 100.0f);
-		}
-	}
+	
 
 	
 		//Create Depth Stencil State
@@ -596,7 +457,8 @@ bool DXRenderer::OnInit()
 void DXRenderer::Render()
 {
 	m_RotateAngle += 0.025f;
-	m_CBV[m_FrameIndex].pBuffer->World = DirectX::XMMatrixRotationY(m_RotateAngle);
+	//m_CBV[m_FrameIndex].pBuffer->World = DirectX::XMMatrixRotationY(m_RotateAngle);
+	m_Objects[0]->cbv[m_FrameIndex].pBuffer->World = DirectX::XMMatrixRotationY(m_RotateAngle);
 
 	m_pCmdAllocator[m_FrameIndex]->Reset();
 	m_pCmdList->Reset(m_pCmdAllocator[m_FrameIndex].Get(), nullptr);
@@ -619,8 +481,10 @@ void DXRenderer::Render()
 	{
 		//Polygon lender process
 		m_pCmdList->SetGraphicsRootSignature(m_pRootSignature.Get());
-		m_pCmdList->SetDescriptorHeaps(1, m_pHeapCBV.GetAddressOf());
-		m_pCmdList->SetGraphicsRootConstantBufferView(0, m_CBV[m_FrameIndex].Desc.BufferLocation);
+		//m_pCmdList->SetDescriptorHeaps(1, m_pHeapCBV.GetAddressOf());
+		m_pCmdList->SetDescriptorHeaps(1, m_Objects[0]->m_pHeapCBV.GetAddressOf());
+		//m_pCmdList->SetGraphicsRootConstantBufferView(0, m_CBV[m_FrameIndex].Desc.BufferLocation);
+		m_pCmdList->SetGraphicsRootConstantBufferView(0, m_Objects[0]->cbv[m_FrameIndex].Desc.BufferLocation);
 		m_pCmdList->SetPipelineState(m_pPSO.Get());
 
 		m_pCmdList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
