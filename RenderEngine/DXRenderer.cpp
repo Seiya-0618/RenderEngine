@@ -281,6 +281,9 @@ bool DXRenderer::OnInit()
 		Object* square = new Object(m_Width, m_Height);
 		square->AddMesh(squareMesh, m_pDevice.Get());
 		m_Objects.push_back(square);
+		Object* square2 = new Object(m_Width, m_Height);
+		square2->AddMesh(squareMesh, m_pDevice.Get());
+		m_Objects.push_back(square2);
 		std::cout << m_Objects.size() << std::endl;
 	}
 	
@@ -459,6 +462,7 @@ void DXRenderer::Render()
 	m_RotateAngle += 0.025f;
 	//m_CBV[m_FrameIndex].pBuffer->World = DirectX::XMMatrixRotationY(m_RotateAngle);
 	m_Objects[0]->cbv[m_FrameIndex].pBuffer->World = DirectX::XMMatrixRotationY(m_RotateAngle);
+	m_Objects[1]->cbv[m_FrameIndex].pBuffer->World = DirectX::XMMatrixRotationX(m_RotateAngle);
 
 	m_pCmdAllocator[m_FrameIndex]->Reset();
 	m_pCmdList->Reset(m_pCmdAllocator[m_FrameIndex].Get(), nullptr);
@@ -479,21 +483,24 @@ void DXRenderer::Render()
 	m_pCmdList->ClearDepthStencilView(m_HandleDSV, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
 
 	{
-		//Polygon lender process
-		m_pCmdList->SetGraphicsRootSignature(m_pRootSignature.Get());
-		//m_pCmdList->SetDescriptorHeaps(1, m_pHeapCBV.GetAddressOf());
-		m_pCmdList->SetDescriptorHeaps(1, m_Objects[0]->m_pHeapCBV.GetAddressOf());
-		//m_pCmdList->SetGraphicsRootConstantBufferView(0, m_CBV[m_FrameIndex].Desc.BufferLocation);
-		m_pCmdList->SetGraphicsRootConstantBufferView(0, m_Objects[0]->cbv[m_FrameIndex].Desc.BufferLocation);
-		m_pCmdList->SetPipelineState(m_pPSO.Get());
+		for (auto i = 0; i < 2; ++i)
+		{
+			//Polygon lender process
+			m_pCmdList->SetGraphicsRootSignature(m_pRootSignature.Get());
+			//m_pCmdList->SetDescriptorHeaps(1, m_pHeapCBV.GetAddressOf());
+			m_pCmdList->SetDescriptorHeaps(1, m_Objects[i]->m_pHeapCBV.GetAddressOf());
+			//m_pCmdList->SetGraphicsRootConstantBufferView(0, m_CBV[m_FrameIndex].Desc.BufferLocation);
+			m_pCmdList->SetGraphicsRootConstantBufferView(0, m_Objects[i]->cbv[m_FrameIndex].Desc.BufferLocation);
+			m_pCmdList->SetPipelineState(m_pPSO.Get());
 
-		m_pCmdList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-		m_pCmdList->IASetVertexBuffers(0, 1, &m_Objects[0]->vertexBuffers[0].view);
-		m_pCmdList->IASetIndexBuffer(&m_Objects[0]->indexBuffers[0].view);
-		m_pCmdList->RSSetViewports(1, &m_Viewport);
-		m_pCmdList->RSSetScissorRects(1, &m_Scissor);
+			m_pCmdList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+			m_pCmdList->IASetVertexBuffers(0, 1, &m_Objects[i]->vertexBuffers[0].view);
+			m_pCmdList->IASetIndexBuffer(&m_Objects[i]->indexBuffers[0].view);
+			m_pCmdList->RSSetViewports(1, &m_Viewport);
+			m_pCmdList->RSSetScissorRects(1, &m_Scissor);
 
-		m_pCmdList->DrawIndexedInstanced(6, 1, 0, 0, 0);
+			m_pCmdList->DrawIndexedInstanced(6, 1, 0, 0, 0);
+		}
 	}
 
 	barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
