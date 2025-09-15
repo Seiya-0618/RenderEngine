@@ -43,13 +43,11 @@ struct alignas(256) Transform
 	DirectX::XMMATRIX Projection;
 };
 
-template<typename T> struct ConstantBufferView
-{
-	ComPtr<ID3D12Resource> buffer;
-	D3D12_CONSTANT_BUFFER_VIEW_DESC Desc;
-	D3D12_CPU_DESCRIPTOR_HANDLE HandleCPU;
+struct ObjectCBVInfo {
 	D3D12_GPU_DESCRIPTOR_HANDLE HandleGPU;
-	T* pBuffer;
+	D3D12_CPU_DESCRIPTOR_HANDLE HandleCPU;
+	Transform* pBuffer;
+	ComPtr<ID3D12Resource> buffer;
 };
 
 extern Vertex square[];
@@ -73,7 +71,7 @@ public:
 	//std::vector<DXMaterial*> materials;
 	Transform transform;
 	ComPtr<ID3D12DescriptorHeap> m_pHeapCBV;
-	ConstantBufferView<Transform> cbv[2]; //double buffer
+	ObjectCBVInfo cbv[2];
 	int meshCount = 0;
 	
 

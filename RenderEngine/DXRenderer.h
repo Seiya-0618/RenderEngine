@@ -3,15 +3,24 @@
 #include <Windows.h>
 #include <cstdint>
 #include <d3d12.h>
+#include <d3dx12.h>
 #include <dxgi1_4.h>
 #include <wrl/client.h>
 #include <DirectXMath.h>
 #include <d3dcompiler.h>
 #include "Object_win.h"
+#include "FileUtil.h"
+#include "ResourceUploadBatch.h"
+#include "DDSTextureLoader.h"
+#include "VertexTypes.h"
+#include <cassert>
+#include <DirectXTex.h>
 
 #pragma comment(lib, "d3d12.lib")
 #pragma comment(lib, "dxgi.lib")
+#pragma comment(lib, "dxguid.lib")
 #pragma comment(lib, "d3dcompiler.lib")
+#pragma comment(lib, "DirectXTex.lib")
 
 template<typename T> using ComPtr = Microsoft::WRL::ComPtr<T>;
 /*
@@ -21,6 +30,7 @@ struct alignas(256) Transform
 	DirectX::XMMATRIX View;
 	DirectX::XMMATRIX Projection;
 };
+*/
 
 template<typename T> struct ConstantBufferView
 {
@@ -29,7 +39,22 @@ template<typename T> struct ConstantBufferView
 	D3D12_GPU_DESCRIPTOR_HANDLE HandleGPU;
 	T* pBuffer;
 };
+
+
+/*
+UINT64 GetRequiredIntermediateSize(
+	ID3D12Resource* pDestinationResource,
+	UINT FirstSubresource,
+	UINT NumSubresources
+);
 */
+
+struct Texture
+{
+	ComPtr<ID3D12Resource> pResource;
+	D3D12_CPU_DESCRIPTOR_HANDLE HandleCPU;
+	D3D12_GPU_DESCRIPTOR_HANDLE HandleGPU;
+};
 
 class DXRenderer
 {
@@ -58,7 +83,7 @@ private:
 	ComPtr<ID3D12DescriptorHeap> m_pHeapRTV;
 	ComPtr<ID3D12Fence> m_pFence;
 
-	ComPtr<ID3D12DescriptorHeap> m_pHeapCBV;
+	ComPtr<ID3D12DescriptorHeap> m_pHeapCBV_SRV_UAV;
 	ComPtr<ID3D12Resource> m_pVB;              //頂点バッファ
 	ComPtr<ID3D12Resource> m_pCB[FrameCount];  //定数バッファ
 	ComPtr<ID3D12RootSignature> m_pRootSignature;
@@ -78,5 +103,7 @@ private:
 	float m_RotateAngle;
 	uint32_t m_Width;
 	uint32_t m_Height;
+
+	Texture m_Texture;
 
 };
