@@ -3,7 +3,7 @@
 #include <vector>
 #include <d3d12.h>
 #include <DirectXMath.h>
-#include "DXMaterial.h"
+//#include "DXMaterial.h"
 #include <wrl/client.h>
 
 template<typename T> using ComPtr = Microsoft::WRL::ComPtr<T>;
@@ -13,9 +13,10 @@ template<typename T> using ComPtr = Microsoft::WRL::ComPtr<T>;
 struct Vertex
 {
 	DirectX::XMFLOAT3 position;
-	DirectX::XMFLOAT4 color;
+	//DirectX::XMFLOAT4 color;
 	DirectX::XMFLOAT2 uv;
 	DirectX::XMFLOAT3 normal;
+	DirectX::XMFLOAT3 tangent;
 };
 
 
@@ -24,6 +25,7 @@ struct Mesh
 {
 	std::vector<Vertex> vertices;
 	std::vector<uint32_t> indices;
+	uint32_t materialIndex;
 };
 
 struct VertexBuffer {
@@ -61,14 +63,13 @@ class Object
 public:
 	Object(uint32_t R_width, uint32_t R_height);
 	~Object();
-	//void AddMesh(Mesh mesh);
 	bool AddMesh(Mesh mesh, ID3D12Device* device);
-	//void AddMaterial(DXMaterial material);
+	void AddChild(Object* child);
+	Object* GetParent();
 	std::vector<VertexBuffer> vertexBuffers;
 	std::vector<IndexBuffer> indexBuffers;
+	std::vector<Object*> children;
 	
-	//std::vector<Mesh*> meshes;
-	//std::vector<DXMaterial*> materials;
 	Transform transform;
 	ComPtr<ID3D12DescriptorHeap> m_pHeapCBV;
 	ObjectCBVInfo cbv[2];
@@ -76,6 +77,7 @@ public:
 	
 
 private:
+	Object* parent;
 	uint32_t width;
 	uint32_t height;
 };

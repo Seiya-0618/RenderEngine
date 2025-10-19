@@ -13,6 +13,7 @@
 #include "ResourceUploadBatch.h"
 #include "DDSTextureLoader.h"
 #include "VertexTypes.h"
+//#include "ModelLoader.h"
 #include <cassert>
 #include <DirectXTex.h>
 
