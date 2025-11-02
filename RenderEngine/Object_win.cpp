@@ -1,10 +1,10 @@
 #include "Object_win.h"
 
 Vertex square[] = {
-	{DirectX::XMFLOAT3(-1.0f, 1.0f, 0.0f), DirectX::XMFLOAT2(0.0f, 0.0f), DirectX::XMFLOAT3(0.0f, 1.0f, 0.0f)},
-	{DirectX::XMFLOAT3(1.0f, 1.0f, 0.0f),  DirectX::XMFLOAT2(1.0f, 0.0f), DirectX::XMFLOAT3(0.0f, 1.0f, 0.0f)},
-	{DirectX::XMFLOAT3(1.0f, -1.0f, 0.0f), DirectX::XMFLOAT2(1.0f, 1.0f), DirectX::XMFLOAT3(0.0f, 1.0f, 0.0f)},
-	{DirectX::XMFLOAT3(-1.0f, -1.0f, 0.0f), DirectX::XMFLOAT2(0.0f, 1.0f), DirectX::XMFLOAT3(0.0f, 1.0f, 0.0f)}
+	{DirectX::XMFLOAT3(-1.0f, 1.5f, 0.0f), DirectX::XMFLOAT2(0.0f, 0.0f), DirectX::XMFLOAT3(0.0f, 1.0f, 0.0f)},
+	{DirectX::XMFLOAT3(1.0f, 1.5f, 0.0f),  DirectX::XMFLOAT2(1.0f, 0.0f), DirectX::XMFLOAT3(0.0f, 1.0f, 0.0f)},
+	{DirectX::XMFLOAT3(1.0f, -1.5f, 0.0f), DirectX::XMFLOAT2(1.0f, 1.0f), DirectX::XMFLOAT3(0.0f, 1.0f, 0.0f)},
+	{DirectX::XMFLOAT3(-1.0f, -1.5f, 0.0f), DirectX::XMFLOAT2(0.0f, 1.0f), DirectX::XMFLOAT3(0.0f, 1.0f, 0.0f)}
 };
 
 Mesh squareMesh = {
@@ -12,9 +12,10 @@ Mesh squareMesh = {
 	std::vector<uint32_t>{0, 1, 2, 0, 2, 3}
 };
 
-Object::Object(uint32_t R_width, uint32_t R_height)
+Object::Object(uint32_t R_width, uint32_t R_height, size_t id)
 	:width(R_width),
-	height(R_height)
+	height(R_height),
+	objectID(id)
 {
 	/* Do Nothing */
 }
@@ -242,20 +243,16 @@ bool Object::AddMesh(Mesh mesh, ID3D12Device* device)
 	}
 
 }
-/*
-void Object::AddMaterial(DXMaterial material)
-{
-	materials.push_back(&material);
-}
-*/
+
 
 void Object::AddChild(Object* child)
 {
-	children.push_back(child);
-	child->parent = this;
+	childrenIDs.push_back(child->objectID);
+	child->parentID = this->objectID;
 }
 
-Object* Object::GetParent()
+
+size_t Object::GetParentID()
 {
-	return parent;
+	return parentID;
 }

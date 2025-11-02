@@ -57,8 +57,8 @@ DXRenderer::DXRenderer(uint32_t width, uint32_t height)
 	m_pPSO(nullptr),
 	m_Width(width),
 	m_Height(height),
-	m_Texture{}
-
+	m_Texture{},
+	m_Scene(width, height, 0.1f, 100.0f)
 {
 	/* Do Nothing */
 }
@@ -303,15 +303,17 @@ bool DXRenderer::InitD3D(HWND hwnd)
 
 bool DXRenderer::OnInit()
 {
+	
 	{
 		//Load Mesh
-		Object* square = new Object(m_Width, m_Height);
+		Object* square = new Object(m_Width, m_Height, 0);
 		square->AddMesh(squareMesh, m_pDevice.Get());
-		m_Objects.push_back(square);
-		Object* square2 = new Object(m_Width, m_Height);
+		m_Scene.addObject(square);
+		Object* square2 = new Object(m_Width, m_Height, 1);
 		square2->AddMesh(squareMesh, m_pDevice.Get());
-		m_Objects.push_back(square2);
-		std::cout << m_Objects.size() << std::endl;
+		//m_Objects.push_back(square2);
+		m_Scene.addObject(square2);
+		std::cout << m_Scene.objects.size() << std::endl;
 	}
 	
 
@@ -325,12 +327,12 @@ bool DXRenderer::OnInit()
 
 		//Descriptor Heap
 		{
-			const UINT objectCount = static_cast<UINT>(m_Objects.size());
+			const UINT objectCount = static_cast<UINT>(m_Scene.objects.size());
 			const UINT cbvCount = objectCount * FrameCount;
 
 			D3D12_DESCRIPTOR_HEAP_DESC heapDesc = {};
 			heapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
-			heapDesc.NumDescriptors = objectCount + 1;  //ShaderResourceView‚Å1‚Â
+			heapDesc.NumDescriptors = cbvCount + 1;  //ShaderResourceView‚Å1‚Â
 			heapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
 			heapDesc.NodeMask = 0;
 
@@ -379,13 +381,18 @@ bool DXRenderer::OnInit()
 					Transform* pBuffer = nullptr;
 					hr = buffer->Map(0, nullptr, reinterpret_cast<void**>(&pBuffer));
 
+					/*
 					m_Objects[objIdx]->cbv[frameIdx].HandleCPU = handleCPU;
 					m_Objects[objIdx]->cbv[frameIdx].HandleGPU = handleGPU;
 					m_Objects[objIdx]->cbv[frameIdx].pBuffer = pBuffer;
 					m_Objects[objIdx]->cbv[frameIdx].buffer = buffer;
+					*/
 
-					//handleCPU.ptr += incrementSize;
-					//handleGPU.ptr += incrementSize;
+					m_Scene.objects[objIdx]->cbv[frameIdx].HandleCPU = handleCPU;
+					m_Scene.objects[objIdx]->cbv[frameIdx].HandleGPU = handleGPU;
+					m_Scene.objects[objIdx]->cbv[frameIdx].pBuffer = pBuffer;
+					m_Scene.objects[objIdx]->cbv[frameIdx].buffer = buffer;
+
 
 					auto eyePos = DirectX::XMVectorSet(0.0f, 0.0f, 5.0f, 0.0f);
 					auto targetPos = DirectX::XMVectorZero();
@@ -393,9 +400,14 @@ bool DXRenderer::OnInit()
 					auto fovY = DirectX::XMConvertToRadians(37.5f);
 					auto aspect = static_cast<float>(m_Width) / static_cast<float>(m_Height);
 
+					/*
 					m_Objects[objIdx]->cbv[frameIdx].pBuffer->World = DirectX::XMMatrixIdentity();
 					m_Objects[objIdx]->cbv[frameIdx].pBuffer->View = DirectX::XMMatrixLookAtRH(eyePos, targetPos, upward);
 					m_Objects[objIdx]->cbv[frameIdx].pBuffer->Projection = DirectX::XMMatrixPerspectiveFovRH(fovY, aspect, 0.1f, 100.0f);
+					*/
+					m_Scene.objects[objIdx]->cbv[frameIdx].pBuffer->World = DirectX::XMMatrixIdentity();
+					m_Scene.objects[objIdx]->cbv[frameIdx].pBuffer->View = DirectX::XMMatrixLookAtRH(eyePos, targetPos, upward);
+					m_Scene.objects[objIdx]->cbv[frameIdx].pBuffer->Projection = DirectX::XMMatrixPerspectiveFovRH(fovY, aspect, 0.1f, 100.0f);
 				}
 			}
 			auto srvHandleCPU = m_pHeapCBV_SRV_UAV->GetCPUDescriptorHandleForHeapStart();
@@ -490,7 +502,7 @@ bool DXRenderer::OnInit()
 	{
 
 		std::wstring texturePath;
-		if (!SearchFilePath(L"res/Salens.png", texturePath))
+		if (!SearchFilePath(L"res/Sample.png", texturePath))
 		{
 			std::cout << "Failed to find texture file." << std::endl;
 			return false;
@@ -732,10 +744,13 @@ bool DXRenderer::OnInit()
 
 void DXRenderer::Render()
 {
+	std::cout << "num of Objects" << m_Scene.objects.size() << std::endl;
 	m_RotateAngle += 0.025f;
 	//m_CBV[m_FrameIndex].pBuffer->World = DirectX::XMMatrixRotationY(m_RotateAngle);
-	m_Objects[0]->cbv[m_FrameIndex].pBuffer->World = DirectX::XMMatrixRotationY(m_RotateAngle);
-	m_Objects[1]->cbv[m_FrameIndex].pBuffer->World = DirectX::XMMatrixRotationX(m_RotateAngle);
+	//m_Objects[0]->cbv[m_FrameIndex].pBuffer->World = DirectX::XMMatrixRotationY(m_RotateAngle);
+	m_Scene.objects[0]->cbv[m_FrameIndex].pBuffer->World = DirectX::XMMatrixRotationY(m_RotateAngle);
+	//m_Objects[1]->cbv[m_FrameIndex].pBuffer->World = DirectX::XMMatrixRotationX(m_RotateAngle);
+	m_Scene.objects[1]->cbv[m_FrameIndex].pBuffer->World = DirectX::XMMatrixRotationX(m_RotateAngle);
 
 	m_pCmdAllocator[m_FrameIndex]->Reset();
 	m_pCmdList->Reset(m_pCmdAllocator[m_FrameIndex].Get(), nullptr);
@@ -762,13 +777,13 @@ void DXRenderer::Render()
 
 			m_pCmdList->SetDescriptorHeaps(1, m_pHeapCBV_SRV_UAV.GetAddressOf());
 			m_pCmdList->SetGraphicsRootSignature(m_pRootSignature.Get());
-			m_pCmdList->SetGraphicsRootConstantBufferView(0, m_Objects[i]->cbv[m_FrameIndex].buffer->GetGPUVirtualAddress());
+			m_pCmdList->SetGraphicsRootConstantBufferView(0, m_Scene.objects[i]->cbv[m_FrameIndex].buffer->GetGPUVirtualAddress());
 			m_pCmdList->SetGraphicsRootDescriptorTable(1, m_Texture.HandleGPU);
 			m_pCmdList->SetPipelineState(m_pPSO.Get());
 
 			m_pCmdList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-			m_pCmdList->IASetVertexBuffers(0, 1, &m_Objects[i]->vertexBuffers[0].view);
-			m_pCmdList->IASetIndexBuffer(&m_Objects[i]->indexBuffers[0].view);
+			m_pCmdList->IASetVertexBuffers(0, 1, &m_Scene.objects[i]->vertexBuffers[0].view);
+			m_pCmdList->IASetIndexBuffer(&m_Scene.objects[i]->indexBuffers[0].view);
 			m_pCmdList->RSSetViewports(1, &m_Viewport);
 			m_pCmdList->RSSetScissorRects(1, &m_Scissor);
 

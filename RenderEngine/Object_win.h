@@ -61,23 +61,24 @@ extern const size_t squareVertexCount;
 class Object
 {
 public:
-	Object(uint32_t R_width, uint32_t R_height);
+	Object(uint32_t R_width, uint32_t R_height, size_t id);
 	~Object();
 	bool AddMesh(Mesh mesh, ID3D12Device* device);
 	void AddChild(Object* child);
-	Object* GetParent();
+	size_t GetParentID();
 	std::vector<VertexBuffer> vertexBuffers;
 	std::vector<IndexBuffer> indexBuffers;
-	std::vector<Object*> children;
+	std::vector<size_t> childrenIDs;
 	
 	Transform transform;
 	ComPtr<ID3D12DescriptorHeap> m_pHeapCBV;
 	ObjectCBVInfo cbv[2];
 	int meshCount = 0;
-	
+	bool isRoot = true;
+	size_t objectID;
 
 private:
-	Object* parent;
+	size_t parentID;
 	uint32_t width;
 	uint32_t height;
 };

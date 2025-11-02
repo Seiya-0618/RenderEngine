@@ -5,6 +5,7 @@ bool ModelLoad(wchar_t* filepath)
 	if (!filepath)
 	{
 		std::cout << "filepath is null." << std::endl;
+		return false;
 	}
 
 	auto path = ToUTF8(filepath);
@@ -17,7 +18,6 @@ bool ModelLoad(wchar_t* filepath)
 	flag |= aiProcess_RemoveRedundantMaterials;
 	flag |= aiProcess_OptimizeMeshes;
 
-	/*
 	auto pScene = importer.ReadFile(path, flag);
 
 	if (pScene == nullptr)
@@ -31,7 +31,6 @@ bool ModelLoad(wchar_t* filepath)
 	{
 		auto pMesh = pScene->mMeshes[i];
 	}
-	*/
 
 
 	return true;

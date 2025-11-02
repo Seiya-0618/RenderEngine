@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|Win32">
@@ -157,15 +157,18 @@
     <ClCompile Include="Main.cpp" />
     <ClCompile Include="ModelLoader.cpp" />
     <ClCompile Include="Object_win.cpp" />
+    <ClCompile Include="Scene.cpp" />
     <ClCompile Include="Window.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="App.h" />
+    <ClInclude Include="Camera.h" />
     <ClInclude Include="DXMaterial.h" />
     <ClInclude Include="DXRenderer.h" />
     <ClInclude Include="FileUtil.h" />
     <ClInclude Include="ModelLoader.h" />
     <ClInclude Include="Object_win.h" />
+    <ClInclude Include="Scene.h" />
     <ClInclude Include="Window.h" />
   </ItemGroup>
   <ItemGroup>

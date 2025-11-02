@@ -8,6 +8,7 @@
 #include <string>
 #include <vector>
 #include <d3d12.h>
+#include "Object_win.h"
 
 #pragma comment (lib, "assimp-vc142-mtd.lib")
 

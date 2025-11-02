@@ -9,6 +9,7 @@
 #include <DirectXMath.h>
 #include <d3dcompiler.h>
 #include "Object_win.h"
+#include "Scene.h"
 #include "FileUtil.h"
 #include "ResourceUploadBatch.h"
 #include "DDSTextureLoader.h"
@@ -68,6 +69,7 @@ public:
 	void TermD3D();
 	void WaitGpu();
 	void Present(uint32_t interval);
+	Scene m_Scene;
 
 
 private:
@@ -90,7 +92,7 @@ private:
 	ComPtr<ID3D12RootSignature> m_pRootSignature;
 	ComPtr<ID3D12PipelineState> m_pPSO;
 
-	std::vector<Object*> m_Objects;
+	//std::vector<Object*> m_Objects;
 
 	HANDLE m_FenceEvent;
 	uint64_t m_FenceCounter[FrameCount];
