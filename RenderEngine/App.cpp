@@ -5,10 +5,13 @@ App::App(uint32_t width, uint32_t height)
 	:m_window(nullptr),
 	m_renderer(nullptr),
 	m_width(width),
-	m_height(height)
+	m_height(height),
+	mainScene(nullptr)
 {
 	m_window = new Window(m_width, m_height);
-	m_renderer = new DXRenderer(m_width, m_height);
+	mainScene = new Scene(static_cast<float>(m_width), static_cast<float>(m_height), 0.1f, 100.0f);
+	scenes.push_back(mainScene);
+	m_renderer = new DXRenderer(m_width, m_height, mainScene);
 }
 
 App::~App()
@@ -32,6 +35,7 @@ bool App::InitApp()
 	{
 		return false;
 	}
+
 	m_window->Show();
 	m_renderer->InitD3D(m_window->GetHwnd());
 	m_renderer->OnInit();

@@ -4,6 +4,7 @@
 #include <cstdint>
 #include "Window.h"
 #include "DXRenderer.h"
+#include "Scene.h"
 
 class App
 {
@@ -15,9 +16,12 @@ public:
 	uint32_t m_width;
 	uint32_t m_height;
 
+	std::vector<Scene*> scenes;
+
 private:
 	Window* m_window;
 	DXRenderer* m_renderer;
+	Scene* mainScene;
 	bool InitApp();
 	void TermApp();
 	void MainLoop();

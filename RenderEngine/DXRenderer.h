@@ -61,7 +61,7 @@ struct Texture
 class DXRenderer
 {
 public:
-	DXRenderer(uint32_t width, uint32_t height);
+	DXRenderer(uint32_t width, uint32_t height, Scene* scene);
 	~DXRenderer();
 	bool InitD3D(HWND hwnd);
 	bool OnInit();
@@ -69,7 +69,7 @@ public:
 	void TermD3D();
 	void WaitGpu();
 	void Present(uint32_t interval);
-	Scene m_Scene;
+	Scene* m_Scene;
 
 
 private:
