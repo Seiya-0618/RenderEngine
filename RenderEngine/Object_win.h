@@ -75,7 +75,7 @@ public:
 	ObjectCBVInfo cbv[2];
 	int meshCount = 0;
 	bool isRoot = true;
-	size_t objectID;
+	uint32_t objectID;
 
 private:
 	size_t parentID;

@@ -92,8 +92,6 @@ private:
 	ComPtr<ID3D12RootSignature> m_pRootSignature;
 	ComPtr<ID3D12PipelineState> m_pPSO;
 
-	//std::vector<Object*> m_Objects;
-
 	HANDLE m_FenceEvent;
 	uint64_t m_FenceCounter[FrameCount];
 	uint32_t m_FrameIndex;
