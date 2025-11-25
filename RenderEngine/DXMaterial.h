@@ -4,6 +4,7 @@
 #include <wrl/client.h>
 #include <DirectXMath.h>
 #include <string>
+#include <vector>
 
 #pragma comment(lib, "d3d12.lib")
 #pragma comment(lib, "dxgi.lib")
@@ -19,6 +20,7 @@ public:
 
 	ComPtr<ID3D12PipelineState> m_pPSO;
 	std::string DiffuseMapPath;
+	std::vector<size_t> inheritedObjectIDs;
 
 
 private:

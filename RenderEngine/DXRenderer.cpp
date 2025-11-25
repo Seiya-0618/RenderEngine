@@ -729,12 +729,18 @@ bool DXRenderer::OnInit()
 	return true;
 }
 
-void DXRenderer::Render()
+void DXRenderer::UpdateObjects()
 {
 	m_RotateAngle += 0.025f;
-	m_Scene->objects[0]->cbv[m_FrameIndex].pBuffer->World = DirectX::XMMatrixRotationY(m_RotateAngle);
-	m_Scene->objects[1]->cbv[m_FrameIndex].pBuffer->World = DirectX::XMMatrixRotationX(m_RotateAngle);
+	for (uint32_t i = 0; i < m_Scene->objects.size(); ++i) {
+		m_Scene->objects[i]->cbv[m_FrameIndex].pBuffer->World = DirectX::XMMatrixRotationY(m_RotateAngle * i);
 
+
+	}
+}
+
+void DXRenderer::Render()
+{
 	m_pCmdAllocator[m_FrameIndex]->Reset();
 	m_pCmdList->Reset(m_pCmdAllocator[m_FrameIndex].Get(), nullptr);
 

@@ -69,6 +69,7 @@ public:
 	void TermD3D();
 	void WaitGpu();
 	void Present(uint32_t interval);
+	void UpdateObjects();
 	Scene* m_Scene;
 
 

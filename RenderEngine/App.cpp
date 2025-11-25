@@ -55,6 +55,7 @@ void App::MainLoop()
 	{
 		if (!m_window->MessageLoop())
 		{
+			m_renderer->UpdateObjects();
 			m_renderer->Render();
 		}
 	}
