@@ -318,11 +318,11 @@ bool DXRenderer::OnInit()
 
 	
 		//Create Depth Stencil State
-		D3D12_DEPTH_STENCIL_DESC depthDesc = {};
-		depthDesc.DepthEnable = TRUE;
-		depthDesc.DepthWriteMask = D3D12_DEPTH_WRITE_MASK_ALL;
-		depthDesc.DepthFunc = D3D12_COMPARISON_FUNC_LESS;
-		depthDesc.StencilEnable = FALSE;
+	    m_DSState = {};
+		m_DSState.DepthEnable = TRUE;
+		m_DSState.DepthWriteMask = D3D12_DEPTH_WRITE_MASK_ALL;
+		m_DSState.DepthFunc = D3D12_COMPARISON_FUNC_LESS;
+		m_DSState.StencilEnable = FALSE;
 
 		//Descriptor Heap
 		{
@@ -486,6 +486,8 @@ bool DXRenderer::OnInit()
 		}
 	}
 
+	CreatePipelineStateObject();
+
 	{
 
 		std::wstring texturePath;
@@ -611,105 +613,6 @@ bool DXRenderer::OnInit()
 	
 
 	{
-		//Create Pipeline State Object
-
-		D3D12_INPUT_ELEMENT_DESC elements[3] = {};
-		elements[0].SemanticName = "POSITION";
-		elements[0].SemanticIndex = 0;
-		elements[0].Format = DXGI_FORMAT_R32G32B32_FLOAT;
-		elements[0].InputSlot = 0;
-		elements[0].AlignedByteOffset = D3D12_APPEND_ALIGNED_ELEMENT;
-		elements[0].InputSlotClass = D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA;
-		elements[0].InstanceDataStepRate = 0;
-
-		elements[1].SemanticName = "TEXCOORD";
-		elements[1].SemanticIndex = 0;
-		elements[1].Format = DXGI_FORMAT_R32G32_FLOAT;
-		elements[1].InputSlot = 0;
-		elements[1].AlignedByteOffset = D3D12_APPEND_ALIGNED_ELEMENT;
-		elements[1].InputSlotClass = D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA;
-		elements[1].InstanceDataStepRate = 0;
-		
-		elements[2].SemanticName = "NORMAL";
-		elements[2].SemanticIndex = 0;
-		elements[2].Format = DXGI_FORMAT_R32G32B32_FLOAT;
-		elements[2].InputSlot = 0;
-		elements[2].AlignedByteOffset = D3D12_APPEND_ALIGNED_ELEMENT;
-		elements[2].InputSlotClass = D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA;
-		elements[2].InstanceDataStepRate = 0;
-		
-
-		D3D12_RASTERIZER_DESC rastDesc = {};
-		rastDesc.FillMode = D3D12_FILL_MODE_SOLID;
-		rastDesc.CullMode = D3D12_CULL_MODE_NONE;
-		rastDesc.FrontCounterClockwise = FALSE;
-		rastDesc.DepthBias = D3D12_DEFAULT_DEPTH_BIAS;
-		rastDesc.DepthBiasClamp = D3D12_DEFAULT_DEPTH_BIAS_CLAMP;
-		rastDesc.SlopeScaledDepthBias = D3D12_DEFAULT_SLOPE_SCALED_DEPTH_BIAS;
-		rastDesc.DepthClipEnable = FALSE;
-		rastDesc.MultisampleEnable = FALSE;
-		rastDesc.AntialiasedLineEnable = FALSE;
-		rastDesc.ForcedSampleCount = 0;
-		rastDesc.ConservativeRaster = D3D12_CONSERVATIVE_RASTERIZATION_MODE_OFF;
-
-		D3D12_RENDER_TARGET_BLEND_DESC blendDesc = {
-			FALSE, FALSE,
-			D3D12_BLEND_ONE, D3D12_BLEND_ZERO, D3D12_BLEND_OP_ADD,
-		D3D12_BLEND_ONE, D3D12_BLEND_ZERO, D3D12_BLEND_OP_ADD,
-		D3D12_LOGIC_OP_NOOP,
-		D3D12_COLOR_WRITE_ENABLE_ALL };
-
-		D3D12_BLEND_DESC descBS;
-		descBS.AlphaToCoverageEnable = FALSE;
-		descBS.IndependentBlendEnable = FALSE;
-		for (UINT i = 0; i < D3D12_SIMULTANEOUS_RENDER_TARGET_COUNT; ++i)
-		{
-			descBS.RenderTarget[i] = blendDesc;
-		}
-
-		ComPtr<ID3DBlob> pVSBlob;
-		ComPtr<ID3DBlob> pPSBlob;
-
-		auto hr = D3DReadFileToBlob(L"SimpleTexVS.cso", pVSBlob.GetAddressOf());
-		if (FAILED(hr))
-		{
-			std::cout << "Failed to load vertex shader." << std::endl;
-			//return false;
-		}
-		hr = D3DReadFileToBlob(L"SimpleTexPS.cso", pPSBlob.GetAddressOf());
-		if (FAILED(hr))
-		{
-			std::cout << "Failed to load pixerl shader." << std::endl;
-			return false;
-		}
-
-		D3D12_GRAPHICS_PIPELINE_STATE_DESC descPSO = {};
-		descPSO.InputLayout = { elements, _countof(elements) };
-		descPSO.pRootSignature = m_pRootSignature.Get();
-		descPSO.VS = { pVSBlob->GetBufferPointer(), pVSBlob->GetBufferSize() };
-		descPSO.PS = { pPSBlob->GetBufferPointer(), pPSBlob->GetBufferSize() };
-		descPSO.RasterizerState = rastDesc;
-		descPSO.BlendState = descBS;
-		descPSO.DepthStencilState = depthDesc;
-		descPSO.DepthStencilState.DepthEnable = TRUE;
-		descPSO.DepthStencilState.StencilEnable = FALSE;
-		descPSO.SampleMask = UINT_MAX;
-		descPSO.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
-		descPSO.NumRenderTargets = 1;
-		descPSO.RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM_SRGB;
-		descPSO.DSVFormat = DXGI_FORMAT_D32_FLOAT;
-		descPSO.SampleDesc.Count = 1;
-		descPSO.SampleDesc.Quality = 0;
-
-		hr = m_pDevice->CreateGraphicsPipelineState(&descPSO, IID_PPV_ARGS(m_pPSO.GetAddressOf()));
-		if (FAILED(hr))
-		{
-			std::cout << "Failed to create Pipeline State Object." << std::endl;
-			return false;
-		}
-	}
-
-	{
 		//Viewport and ScissorRect
 		m_Viewport.TopLeftX = 0;
 		m_Viewport.TopLeftY = 0;
@@ -729,11 +632,111 @@ bool DXRenderer::OnInit()
 	return true;
 }
 
+bool DXRenderer::CreatePipelineStateObject()
+{
+
+	D3D12_INPUT_ELEMENT_DESC elements[3] = {};
+	elements[0].SemanticName = "POSITION";
+	elements[0].SemanticIndex = 0;
+	elements[0].Format = DXGI_FORMAT_R32G32B32_FLOAT;
+	elements[0].InputSlot = 0;
+	elements[0].AlignedByteOffset = D3D12_APPEND_ALIGNED_ELEMENT;
+	elements[0].InputSlotClass = D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA;
+	elements[0].InstanceDataStepRate = 0;
+
+	elements[1].SemanticName = "TEXCOORD";
+	elements[1].SemanticIndex = 0;
+	elements[1].Format = DXGI_FORMAT_R32G32_FLOAT;
+	elements[1].InputSlot = 0;
+	elements[1].AlignedByteOffset = D3D12_APPEND_ALIGNED_ELEMENT;
+	elements[1].InputSlotClass = D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA;
+	elements[1].InstanceDataStepRate = 0;
+
+	elements[2].SemanticName = "NORMAL";
+	elements[2].SemanticIndex = 0;
+	elements[2].Format = DXGI_FORMAT_R32G32B32_FLOAT;
+	elements[2].InputSlot = 0;
+	elements[2].AlignedByteOffset = D3D12_APPEND_ALIGNED_ELEMENT;
+	elements[2].InputSlotClass = D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA;
+	elements[2].InstanceDataStepRate = 0;
+
+	D3D12_RASTERIZER_DESC rastDesc = {};
+	rastDesc.FillMode = D3D12_FILL_MODE_SOLID;
+	rastDesc.CullMode = D3D12_CULL_MODE_NONE;
+	rastDesc.FrontCounterClockwise = FALSE;
+	rastDesc.DepthBias = D3D12_DEFAULT_DEPTH_BIAS;
+	rastDesc.DepthBiasClamp = D3D12_DEFAULT_DEPTH_BIAS_CLAMP;
+	rastDesc.SlopeScaledDepthBias = D3D12_DEFAULT_SLOPE_SCALED_DEPTH_BIAS;
+	rastDesc.DepthClipEnable = FALSE;
+	rastDesc.MultisampleEnable = FALSE;
+	rastDesc.AntialiasedLineEnable = FALSE;
+	rastDesc.ForcedSampleCount = 0;
+	rastDesc.ConservativeRaster = D3D12_CONSERVATIVE_RASTERIZATION_MODE_OFF;
+
+	D3D12_RENDER_TARGET_BLEND_DESC blendDesc = {
+		FALSE, FALSE,
+		D3D12_BLEND_ONE, D3D12_BLEND_ZERO, D3D12_BLEND_OP_ADD,
+	D3D12_BLEND_ONE, D3D12_BLEND_ZERO, D3D12_BLEND_OP_ADD,
+	D3D12_LOGIC_OP_NOOP,
+	D3D12_COLOR_WRITE_ENABLE_ALL };
+
+	D3D12_BLEND_DESC descBS;
+	descBS.AlphaToCoverageEnable = FALSE;
+	descBS.IndependentBlendEnable = FALSE;
+	for (UINT i = 0; i < D3D12_SIMULTANEOUS_RENDER_TARGET_COUNT; ++i)
+	{
+		descBS.RenderTarget[i] = blendDesc;
+	}
+
+	ComPtr<ID3DBlob> pVSBlob;
+	ComPtr<ID3DBlob> pPSBlob;
+
+	auto hr = D3DReadFileToBlob(L"SimpleTexVS.cso", pVSBlob.GetAddressOf());
+	if (FAILED(hr))
+	{
+		std::cout << "Failed to load vertex shader." << std::endl;
+		//return false;
+	}
+	hr = D3DReadFileToBlob(L"SimpleTexPS.cso", pPSBlob.GetAddressOf());
+	if (FAILED(hr))
+	{
+		std::cout << "Failed to load pixerl shader." << std::endl;
+		return false;
+	}
+
+	D3D12_GRAPHICS_PIPELINE_STATE_DESC descPSO = {};
+	descPSO.InputLayout = { elements, _countof(elements) };
+	descPSO.pRootSignature = m_pRootSignature.Get();
+	descPSO.VS = { pVSBlob->GetBufferPointer(), pVSBlob->GetBufferSize() };
+	descPSO.PS = { pPSBlob->GetBufferPointer(), pPSBlob->GetBufferSize() };
+	descPSO.RasterizerState = rastDesc;
+	descPSO.BlendState = descBS;
+	descPSO.DepthStencilState = m_DSState;
+	descPSO.DepthStencilState.DepthEnable = TRUE;
+	descPSO.DepthStencilState.StencilEnable = FALSE;
+	descPSO.SampleMask = UINT_MAX;
+	descPSO.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
+	descPSO.NumRenderTargets = 1;
+	descPSO.RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM_SRGB;
+	descPSO.DSVFormat = DXGI_FORMAT_D32_FLOAT;
+	descPSO.SampleDesc.Count = 1;
+	descPSO.SampleDesc.Quality = 0;
+
+	hr = m_pDevice->CreateGraphicsPipelineState(&descPSO, IID_PPV_ARGS(m_pPSO.GetAddressOf()));
+	if (FAILED(hr))
+	{
+		std::cout << "Failed to create Pipeline State Object." << std::endl;
+		return false;
+	}
+	return true;
+}
+
 void DXRenderer::UpdateObjects()
 {
 	m_RotateAngle += 0.025f;
-	for (uint32_t i = 0; i < m_Scene->objects.size(); ++i) {
-		m_Scene->objects[i]->cbv[m_FrameIndex].pBuffer->World = DirectX::XMMatrixRotationY(m_RotateAngle * i);
+	for (uint32_t i = 0; i < m_Scene->objectIDs.size(); ++i) {
+		Object* object = m_Scene->objectIDMap[m_Scene->objectIDs[i]];
+		object->cbv[m_FrameIndex].pBuffer->World = DirectX::XMMatrixRotationY(m_RotateAngle * (i+1));
 
 
 	}
@@ -760,7 +763,7 @@ void DXRenderer::Render()
 	m_pCmdList->ClearDepthStencilView(m_HandleDSV, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
 
 	{
-		for (auto i = 0; i < 2; ++i)
+		for (auto i = 0; i < m_Scene->objectIDs.size(); i++)
 		{
 			//Polygon lender process
 

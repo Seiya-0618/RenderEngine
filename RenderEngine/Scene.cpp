@@ -2,10 +2,10 @@
 
 Scene::Scene(float camwidth, float camheight, float camnear, float camfar)
 	:objects(),
-	rootObjects(),
+	rootobjectIDMap(),
 	lights(),
-	objectIDCounter(0),
-	rootObjectIDCounter(0)
+	objectIDCounter(0)
+	//rootObjectIDCounter(0)
 {
 	cameras.push_back(new Camera(camwidth / camheight, camnear, camfar));
 	mainCameraIndex = cameras.size() - 1;
@@ -32,14 +32,17 @@ void Scene::addCamera(Camera* camera)
 
 void Scene::addObject(Object* object)
 {
-	objects.insert({ objectIDCounter, object });
-	object->objectID = objectIDCounter;
-	objectIDCounter++;
-	if (object->isRoot)
-	{
-		rootObjects.insert({ rootObjectIDCounter, object });
-		rootObjectIDCounter++;
+	//objects.insert({ objectIDCounter, object });
+	uint32_t id = objectIDCounter;
+	objects.push_back(object);
+	object->objectID = id;
+	objectIDs.push_back(id);
+	objectIDMap[id] = object;
+	if (object->isRoot) {
+		rootobjectIDMap[id] = object;
 	}
+	objectIDCounter++;
+
 	
 }
 

@@ -1,5 +1,6 @@
 #pragma once
 #include <vector>
+#include <map>
 #include <unordered_map>
 #include "Object_win.h"
 #include "Camera.h"
@@ -10,9 +11,13 @@ public:
 	Scene(float camwidth, float camheight, float camnear, float camfar);
 	~Scene();
 	//std::vector<Object*> objects;
-	std::unordered_map<uint32_t, Object*> objects;
+	std::vector<Object*> objects;
+	//std::vector<uint32_t> objectIDs;
+	std::vector<uint32_t> objectIDs;
+	std::map<uint32_t, Object*> objectIDMap;
 	//std::vector<Object*> rootObjects;
-	std::unordered_map<uint32_t, Object*> rootObjects;
+	//std::vector<Object*> rootObjects;
+	std::map<uint32_t, Object*> rootobjectIDMap;
 	std::vector<Object*> lights;
 	std::vector<Camera*> cameras;
 	size_t mainCameraIndex;
@@ -24,6 +29,5 @@ public:
 
 private:
 	uint32_t objectIDCounter;
-	uint32_t rootObjectIDCounter;
 
 };

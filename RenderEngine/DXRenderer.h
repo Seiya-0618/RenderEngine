@@ -65,6 +65,7 @@ public:
 	~DXRenderer();
 	bool InitD3D(HWND hwnd);
 	bool OnInit();
+	bool CreatePipelineStateObject();
 	void Render();
 	void TermD3D();
 	void WaitGpu();
@@ -99,6 +100,7 @@ private:
 	D3D12_CPU_DESCRIPTOR_HANDLE m_HandleRTV[FrameCount];
 	D3D12_CPU_DESCRIPTOR_HANDLE m_HandleDSV;
 	D3D12_VERTEX_BUFFER_VIEW m_VBV;
+	D3D12_DEPTH_STENCIL_DESC m_DSState;
 	D3D12_VIEWPORT m_Viewport;
 	D3D12_RECT m_Scissor;
 	ConstantBufferView<Transform> m_CBV[FrameCount];
