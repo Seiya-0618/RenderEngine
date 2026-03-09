@@ -61,7 +61,7 @@ extern const size_t squareVertexCount;
 class Object
 {
 public:
-	Object(uint32_t R_width, uint32_t R_height, size_t id);
+	Object();
 	~Object();
 	bool AddMesh(Mesh mesh, ID3D12Device* device);
 	void AddChild(Object* child);

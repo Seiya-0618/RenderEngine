@@ -34,16 +34,34 @@ void Scene::addObject(Object* object)
 {
 	//objects.insert({ objectIDCounter, object });
 	uint32_t id = objectIDCounter;
+	size_t index = objects.size();
 	objects.push_back(object);
 	object->objectID = id;
 	objectIDs.push_back(id);
-	objectIDMap[id] = object;
+	objectIDMap[id] = index;
 	if (object->isRoot) {
-		rootobjectIDMap[id] = object;
+		size_t rootobjectindex = rootobjectIDMap.size();
+		rootobjectIDMap[id] = rootobjectindex;
 	}
 	objectIDCounter++;
+}
 
-	
+Object* Scene::callLoader(const wchar_t* path, ID3D12Device* device)
+{
+	Object* loadedObject = ModelLoad(path, device);
+	return loadedObject;
+}
+
+void Scene::removeObject(Object* object)
+{
+	uint32_t id = object->objectID;
+	objects.erase(std::remove(objects.begin(), objects.end(), object), objects.end());
+	objectIDs.erase(std::remove(objectIDs.begin(), objectIDs.end(), id), objectIDs.end());
+	objectIDMap.erase(id);
+	if (object->isRoot) {
+		rootobjectIDMap.erase(id);
+	}
+	delete object;
 }
 
 bool Scene::removeCamera(Camera* camera)

@@ -12,31 +12,14 @@ Mesh squareMesh = {
 	std::vector<uint32_t>{0, 1, 2, 0, 2, 3}
 };
 
-Object::Object(uint32_t R_width, uint32_t R_height, size_t id)
-	:width(R_width),
-	height(R_height),
-	objectID(id)
+Object::Object()
 {
 	/* Do Nothing */
 }
 
 Object::~Object()
 {
-	for (auto vb : vertexBuffers)
-	{
-		vb.vertexBuffer->Release();
-	}
 
-	for (auto ib : indexBuffers)
-	{
-		ib.indexBuffer->Release();
-	}
-	/*
-	for (auto material : materials)
-	{
-		delete material;
-	}
-	*/
 }
 
 bool Object::AddMesh(Mesh mesh, ID3D12Device* device)

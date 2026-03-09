@@ -306,12 +306,28 @@ bool DXRenderer::OnInit()
 	
 	{
 		//Load Mesh
-		Object* square = new Object(m_Width, m_Height, 0);
+		Object* square = new Object();
 		square->AddMesh(squareMesh, m_pDevice.Get());
 		m_Scene->addObject(square);
-		Object* square2 = new Object(m_Width, m_Height, 1);
+		Object* square2 = new Object();
 		square2->AddMesh(squareMesh, m_pDevice.Get());
 		m_Scene->addObject(square2);
+		{
+			std::wstring modelPath;
+			if (SearchFilePath(L"res/WhiteSphere_Distorted.obj", modelPath))
+			{
+				Object* loadedobject = m_Scene->callLoader(modelPath.c_str(), m_pDevice.Get());
+				if (loadedobject != nullptr)
+				{
+					m_Scene->addObject(loadedobject);
+					std::cout << "Loaded model: " << modelPath.c_str() << std::endl;
+				}
+				else
+				{
+					std::cout << "Failed to load model: " << std::endl;
+				}
+			}
+		}
 		std::cout << m_Scene->objects.size() << std::endl;
 	}
 	
@@ -487,6 +503,7 @@ bool DXRenderer::OnInit()
 	}
 
 	CreatePipelineStateObject();
+
 
 	{
 
@@ -733,9 +750,9 @@ bool DXRenderer::CreatePipelineStateObject()
 
 void DXRenderer::UpdateObjects()
 {
-	m_RotateAngle += 0.025f;
+	m_RotateAngle += 0;
 	for (uint32_t i = 0; i < m_Scene->objectIDs.size(); ++i) {
-		Object* object = m_Scene->objectIDMap[m_Scene->objectIDs[i]];
+		Object* object = m_Scene->objects[m_Scene->objectIDMap[m_Scene->objectIDs[i]]];
 		object->cbv[m_FrameIndex].pBuffer->World = DirectX::XMMatrixRotationY(m_RotateAngle * (i+1));
 
 
@@ -766,6 +783,11 @@ void DXRenderer::Render()
 		for (auto i = 0; i < m_Scene->objectIDs.size(); i++)
 		{
 			//Polygon lender process
+			auto obj = m_Scene->objects[i];
+			if (obj->indexBuffers.empty() || obj->vertexBuffers.empty())
+			{
+				continue;
+			}
 
 			m_pCmdList->SetDescriptorHeaps(1, m_pHeapCBV_SRV_UAV.GetAddressOf());
 			m_pCmdList->SetGraphicsRootSignature(m_pRootSignature.Get());
@@ -779,7 +801,9 @@ void DXRenderer::Render()
 			m_pCmdList->RSSetViewports(1, &m_Viewport);
 			m_pCmdList->RSSetScissorRects(1, &m_Scissor);
 
-			m_pCmdList->DrawIndexedInstanced(6, 1, 0, 0, 0);
+			UINT indexCount = obj->indexBuffers[0].view.SizeInBytes / sizeof(uint32_t);
+
+			m_pCmdList->DrawIndexedInstanced(indexCount, 1, 0, 0, 0);
 		}
 	}
 
