@@ -155,8 +155,8 @@
     <ClCompile Include="DXRenderer.cpp" />
     <ClCompile Include="FileUtil.cpp" />
     <ClCompile Include="Main.cpp" />
-    <ClCompile Include="ModelLoader.cpp" />
     <ClCompile Include="Object_win.cpp" />
+    <ClCompile Include="ResourceManager.cpp" />
     <ClCompile Include="Scene.cpp" />
     <ClCompile Include="Window.cpp" />
   </ItemGroup>
@@ -166,8 +166,8 @@
     <ClInclude Include="DXMaterial.h" />
     <ClInclude Include="DXRenderer.h" />
     <ClInclude Include="FileUtil.h" />
-    <ClInclude Include="ModelLoader.h" />
     <ClInclude Include="Object_win.h" />
+    <ClInclude Include="ResourceManager.h" />
     <ClInclude Include="Scene.h" />
     <ClInclude Include="Window.h" />
   </ItemGroup>

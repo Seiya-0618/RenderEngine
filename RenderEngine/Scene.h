@@ -4,7 +4,8 @@
 #include <unordered_map>
 #include "Object_win.h"
 #include "Camera.h"
-#include "ModelLoader.h"
+//#include "ModelLoader.h"
+#include "ResourceManager.h"
 
 class Scene
 {

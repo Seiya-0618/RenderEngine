@@ -48,7 +48,8 @@ void Scene::addObject(Object* object)
 
 Object* Scene::callLoader(const wchar_t* path, ID3D12Device* device)
 {
-	Object* loadedObject = ModelLoad(path, device);
+	ResourceManager resourceManager(device);
+	Object* loadedObject = resourceManager.LoadModel(path);
 	return loadedObject;
 }
 
