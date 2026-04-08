@@ -231,11 +231,11 @@ bool Object::AddMesh(Mesh mesh, ID3D12Device* device)
 void Object::AddChild(Object* child)
 {
 	childrenIDs.push_back(child->objectID);
-	child->parentID = this->objectID;
+	child->parent = this;
 }
 
 
 size_t Object::GetParentID()
 {
-	return parentID;
+	return this->parent ? this->parent->objectID : -1;
 }

@@ -51,12 +51,6 @@ UINT64 GetRequiredIntermediateSize(
 );
 */
 
-struct Texture
-{
-	ComPtr<ID3D12Resource> pResource;
-	D3D12_CPU_DESCRIPTOR_HANDLE HandleCPU;
-	D3D12_GPU_DESCRIPTOR_HANDLE HandleGPU;
-};
 
 class DXRenderer
 {
@@ -66,6 +60,7 @@ public:
 	bool InitD3D(HWND hwnd);
 	bool OnInit();
 	bool CreatePipelineStateObject();
+	bool CreateConstantBuffer(Object* obj, UINT cbvSlotIndex);
 	void Render();
 	void TermD3D();
 	void WaitGpu();
@@ -73,9 +68,16 @@ public:
 	void UpdateObjects();
 	Scene* m_Scene;
 
+	ID3D12Device* GetDevice() const { return m_pDevice.Get(); }
+	ID3D12CommandQueue* GetCommandQueue() const { return m_pQueue.Get(); }
+	ID3D12GraphicsCommandList* GetCommandList() const { return m_pCmdList.Get(); }
+	ID3D12DescriptorHeap* GetCBV_SRV_UAVHeap() const { return m_pHeapCBV_SRV_UAV.Get(); }
+
 
 private:
 	static const uint32_t FrameCount = 2;
+	static const uint32_t maxCBVCount = 1000;
+	static const uint32_t maxTextureCount = 100;
 
 	ComPtr<ID3D12Device> m_pDevice;
 	ComPtr<ID3D12CommandQueue> m_pQueue;
@@ -96,7 +98,8 @@ private:
 
 	HANDLE m_FenceEvent;
 	uint64_t m_FenceCounter[FrameCount];
-	uint32_t m_FrameIndex;
+	uint32_t m_FrameIndex = 0;
+	UINT m_cbvSlotIndex = 0;
 	D3D12_CPU_DESCRIPTOR_HANDLE m_HandleRTV[FrameCount];
 	D3D12_CPU_DESCRIPTOR_HANDLE m_HandleDSV;
 	D3D12_VERTEX_BUFFER_VIEW m_VBV;

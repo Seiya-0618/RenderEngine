@@ -30,6 +30,6 @@ private:
 
 	DirectX::XMFLOAT3 Diffuse;
 	DirectX::XMFLOAT3 Specular;
-	float Alpha;
-	float Shininess;
+	//float Alpha;
+	//float Shininess;
 };

@@ -38,6 +38,13 @@ struct IndexBuffer {
 	D3D12_INDEX_BUFFER_VIEW view;
 };
 
+struct Texture
+{
+	ComPtr<ID3D12Resource> resource;
+	D3D12_CPU_DESCRIPTOR_HANDLE handleCPU;
+	D3D12_GPU_DESCRIPTOR_HANDLE handleGPU;
+};
+
 struct alignas(256) Transform
 {
 	DirectX::XMMATRIX World;
@@ -66,6 +73,8 @@ public:
 	bool AddMesh(Mesh mesh, ID3D12Device* device);
 	void AddChild(Object* child);
 	size_t GetParentID();
+	void SetTextureName(const std::wstring& name) { m_textureName = name; }
+	const std::wstring& GetTextureName() const { return m_textureName; }
 	std::vector<VertexBuffer> vertexBuffers;
 	std::vector<IndexBuffer> indexBuffers;
 	std::vector<size_t> childrenIDs;
@@ -75,10 +84,11 @@ public:
 	ObjectCBVInfo cbv[2];
 	int meshCount = 0;
 	bool isRoot = true;
-	uint32_t objectID;
+	size_t objectID;
 
 private:
-	size_t parentID;
+	Object* parent = nullptr;
 	uint32_t width;
 	uint32_t height;
+	std::wstring m_textureName;
 };

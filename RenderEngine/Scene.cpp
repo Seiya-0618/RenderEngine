@@ -46,12 +46,14 @@ void Scene::addObject(Object* object)
 	objectIDCounter++;
 }
 
+/*
 Object* Scene::callLoader(const wchar_t* path, ID3D12Device* device)
 {
 	ResourceManager resourceManager(device);
 	Object* loadedObject = resourceManager.LoadModel(path);
 	return loadedObject;
 }
+*/
 
 void Scene::removeObject(Object* object)
 {
@@ -96,4 +98,24 @@ bool Scene::changeMainCamera(size_t index)
 		return true;
 	}
 	else return false;
+}
+
+void Scene::AddTexture(const std::wstring& name, std::unique_ptr<Texture> texture)
+{
+	if (textureMap.find(name) != textureMap.end())
+	{
+		std::cout << L"Warning: Texture already exists with name: " << name.c_str() << L". Overwriting." << std::endl;
+		return;
+	}
+	textureMap[name] = std::move(texture);
+}
+
+Texture* Scene::GetTexture(const std::wstring& filepath)
+{
+	auto it = textureMap.find(filepath);
+	if (it != textureMap.end())
+	{
+		return it->second.get();
+	}
+	return nullptr;
 }

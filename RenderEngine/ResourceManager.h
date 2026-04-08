@@ -4,8 +4,11 @@
 #include <string>
 #include <unordered_map>
 #include <d3d12.h>
+#include <d3dx12.h>
 #include <wrl/client.h>
 #include "Object_win.h"
+#include "FileUtil.h"
+#include "Scene.h"
 
 template<typename T> using ComPtr = Microsoft::WRL::ComPtr<T>;
 
@@ -15,44 +18,59 @@ struct LoadedModel
 	std::wstring filepath;
 };
 
-struct LoadedTexture
+
+struct PendingTextureUpload
 {
-	ComPtr<ID3D12Resource> resource;
-	D3D12_CPU_DESCRIPTOR_HANDLE handleCPU;
-	D3D12_GPU_DESCRIPTOR_HANDLE handleGPU;
+	ComPtr<ID3D12Resource> uploadBuffer;
+	std::wstring filepath;
 };
 
 class ResourceManager
 {
 public:
-	ResourceManager(ID3D12Device* device);// , ID3D12CommandQueue* queue);
+	ResourceManager(ID3D12Device* device, ID3D12DescriptorHeap* heap, ID3D12CommandQueue* queue, Scene* scene);
 	~ResourceManager();
 
 	Object* LoadModel(const wchar_t* filepath);
-	LoadedTexture* LoadTexture(const wchar_t* filepath);
+	Texture* LoadTexture(const wchar_t* filepath);
+	void UploadLoadedTextures();
 
 	LoadedModel* GetLoadedModel(const std::wstring& filepath);
-	LoadedTexture* GetLoadedTexture(const std::wstring& filepath);
+	Texture* GetLoadedTexture(const std::wstring& filepath);
 
 	size_t GetLoadedModelCount() const {
 		return m_loadedModels.size();
 	}
+	/*
 	size_t GetLoadedTextureCoount() const {
 		return m_loadedTextures.size();
 	}
+	*/
 
 	void ClearResources();
 
 private:
 	ID3D12Device* m_pDevice;
+	Scene* m_pScene;
+	ID3D12DescriptorHeap* m_pSrvHeap;
 	ID3D12CommandQueue* m_pCommandQueue;
 
+	ComPtr<ID3D12GraphicsCommandList> m_pCommandList;
+	ComPtr<ID3D12CommandAllocator> m_pCommandAllocator;
+
+	const size_t maxCBVCount = 1000;
+	size_t CBVDescriptorIndex = 0;
+	size_t SRVDescriptorIndex = 0;
+
 	std::unordered_map<std::wstring, std::unique_ptr<LoadedModel>> m_loadedModels;
-	std::unordered_map<std::wstring, std::unique_ptr<LoadedTexture>> m_loadedTextures;
+	//std::unordered_map<std::wstring, std::unique_ptr<Texture>> m_loadedTextures;
+
+	std::vector<PendingTextureUpload> m_pendingTextureUploads;
 
 	LoadedModel* LoadModelInternal(const wchar_t* filepath);
-	LoadedTexture* LoadTextureInternal(const wchar_t* filepath);
+	Texture* LoadTextureInternal(const wchar_t* filepath);
 
 	std::string ToUTF8(const std::wstring& value);
+	void WaitGPU();
 
 };

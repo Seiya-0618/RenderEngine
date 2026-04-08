@@ -5,6 +5,7 @@
 #include "Window.h"
 #include "DXRenderer.h"
 #include "Scene.h"
+#include "ResourceManager.h"
 
 class App
 {
@@ -22,6 +23,7 @@ private:
 	Window* m_window;
 	DXRenderer* m_renderer;
 	Scene* mainScene;
+	ResourceManager* m_resourceManager;
 	bool InitApp();
 	void TermApp();
 	void MainLoop();
