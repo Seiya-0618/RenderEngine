@@ -59,6 +59,8 @@ private:
 	ComPtr<ID3D12CommandAllocator> m_pCommandAllocator;
 
 	const size_t maxCBVCount = 1000;
+	static constexpr const wchar_t* MODEL_DIRECTORY = L"res/SampleObj/";
+	static constexpr const wchar_t* TEXTURE_DIRECTORY = L"res/SampleTex/";
 	size_t CBVDescriptorIndex = 0;
 	size_t SRVDescriptorIndex = 0;
 

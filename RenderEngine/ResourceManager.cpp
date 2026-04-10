@@ -57,8 +57,10 @@ ResourceManager::~ResourceManager()
 
 Object* ResourceManager::LoadModel(const wchar_t* filepath)
 {
+	std::wstring filename = GetFileNameFromPath(filepath);
+	std::wstring modelpath = std::wstring(MODEL_DIRECTORY) + filename;
 	std::wstring fullpath;
-	if (!SearchFilePath(filepath, fullpath))
+	if (!SearchFilePath(modelpath.c_str(), fullpath))
 	{
 		std::cout << "Failed to find model file: " << filepath << std::endl;
 		return nullptr;
@@ -164,24 +166,6 @@ Object* ResourceManager::LoadModel(const wchar_t* filepath)
 		m_pScene->addObject(meshObject);
 	}
 
-	/*
-	for (size_t i = 0; i < pScene->mNumMaterials; ++i)
-	{
-		const aiMaterial* material = pScene->mMaterials[i];
-		aiString texturePath;
-		if (material->GetTexture(aiTextureType_DIFFUSE, 0, &texturePath) == AI_SUCCESS)
-		{
-			std::string texPath_str = texturePath.C_Str();
-			std::wstring texturePathW(texPath_str.begin(), texPath_str.end());
-			Texture* texture = LoadTexture(texturePathW.c_str());
-			if (texture == nullptr)
-			{
-				std::cout << "Failed to load texture: " << texturePath.C_Str() << std::endl;
-			}
-		}
-	}
-	UploadLoadedTextures();
-	*/
 	UploadLoadedTextures();
 
 	std::cout << "model loaded: " << path.c_str() << std::endl;
@@ -195,16 +179,9 @@ Object* ResourceManager::LoadModel(const wchar_t* filepath)
 Texture* ResourceManager::LoadTexture(const wchar_t* filepath)
 {
 
+	std::wstring filename = GetFileNameFromPath(filepath);
+	std::wstring texturepath = std::wstring(TEXTURE_DIRECTORY) + filename;
 	std::wstring path;
-	if (!SearchFilePath(filepath, path))
-	{
-		std::cout << "Failed to find texture file." << std::endl;
-		return nullptr;
-	}
-
-	std::cout << "TexturePath : " << path.c_str() << std::endl;
-
-	std::wstring filename = GetFileNameFromPath(path);
 
 	Texture* existingTex = m_pScene->GetTexture(filename);
 	if (existingTex != nullptr)
@@ -212,6 +189,13 @@ Texture* ResourceManager::LoadTexture(const wchar_t* filepath)
 		std::cout << "Texture already loaded: " << filename.c_str() << std::endl;
 		return existingTex;
 	}
+
+	if (!SearchFilePath(texturepath.c_str(), path))
+	{
+		std::wcout << L"Failed to find texture file: " << texturepath.c_str() << std::endl;
+	}
+
+	std::wcout << L" Loaded texture at : " << path.c_str() << std::endl;
 
 	auto loadedtexture = std::make_unique<Texture>();
 	DirectX::TexMetadata metadata = {};
