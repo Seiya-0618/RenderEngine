@@ -14,8 +14,8 @@ public:
 	~Scene();
 	std::vector<Object*> objects;
 	std::vector<uint32_t> objectIDs;
-	std::map<uint32_t, size_t> objectIDMap; //uint32_t: objectID size_t: index
-	std::map<uint32_t, size_t> rootobjectIDMap;
+	std::map<uint32_t, uint32_t> objectIDMap;    //objectID, index
+	std::map<uint32_t, uint32_t> rootobjectIDMap;
 	std::unordered_map<std::wstring, std::unique_ptr<Texture>> textureMap;
 
 	
