@@ -162,8 +162,8 @@ Object* ResourceManager::LoadModel(const wchar_t* filepath)
 			}
 		}
 
-		rootObject->AddChild(meshObject);
 		m_pScene->addObject(meshObject);
+		rootObject->AddChild(meshObject);
 	}
 
 	UploadLoadedTextures();

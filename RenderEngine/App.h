@@ -27,4 +27,5 @@ private:
 	bool InitApp();
 	void TermApp();
 	void MainLoop();
+	void UpdateObjects();
 };

@@ -67,8 +67,21 @@ void App::MainLoop()
 	{
 		if (!m_window->MessageLoop())
 		{
-			m_renderer->UpdateObjects();
+			UpdateObjects();
+			mainScene->UpdateWorldTransforms();
+			m_renderer->UpdateObjectConstants();
 			m_renderer->Render();
+		}
+	}
+}
+
+void App::UpdateObjects()
+{
+	for (auto* obj : mainScene->objects)
+	{
+		if (obj->isRoot)
+		{
+			obj->localTransform.rotation.y += 0.005f; // ЙёУ]СмУxВЁТ▓Ро
 		}
 	}
 }

@@ -45,7 +45,14 @@ struct Texture
 	D3D12_GPU_DESCRIPTOR_HANDLE handleGPU;
 };
 
-struct alignas(256) Transform
+struct ObjectTransform
+{
+	DirectX::XMFLOAT3 position = { 0.0f, 0.0f, 0.0f };
+	DirectX::XMFLOAT3 rotation = { 0.0f, 0.0f, 0.0f }; //Euler
+	DirectX::XMFLOAT3 scale = { 1.0f, 1.0f, 1.0f };
+};
+
+struct alignas(256) ObjectConstants
 {
 	DirectX::XMMATRIX World;
 	DirectX::XMMATRIX View;
@@ -55,7 +62,7 @@ struct alignas(256) Transform
 struct ObjectCBVInfo {
 	D3D12_GPU_DESCRIPTOR_HANDLE HandleGPU;
 	D3D12_CPU_DESCRIPTOR_HANDLE HandleCPU;
-	Transform* pBuffer;
+	ObjectConstants* pBuffer;
 	ComPtr<ID3D12Resource> buffer;
 };
 
@@ -75,11 +82,16 @@ public:
 	size_t GetParentID();
 	void SetTextureName(const std::wstring& name) { m_textureName = name; }
 	const std::wstring& GetTextureName() const { return m_textureName; }
+	DirectX::XMMATRIX TransformToMatrix();
+	void UpdateWorldMatrix(const DirectX::XMMATRIX& parentWorldMatrix);
+	
 	std::vector<VertexBuffer> vertexBuffers;
 	std::vector<IndexBuffer> indexBuffers;
 	std::vector<size_t> childrenIDs;
 	
-	Transform transform;
+	ObjectConstants constants;
+	ObjectTransform localTransform;
+	DirectX::XMMATRIX worldMatrix;
 	ComPtr<ID3D12DescriptorHeap> m_pHeapCBV;
 	ObjectCBVInfo cbv[2];
 	int meshCount = 0;
@@ -88,7 +100,5 @@ public:
 
 private:
 	Object* parent = nullptr;
-	uint32_t width;
-	uint32_t height;
 	std::wstring m_textureName;
 };

@@ -40,20 +40,10 @@ void Scene::addObject(Object* object)
 	objectIDs.push_back(id);
 	objectIDMap[id] = index;
 	if (object->isRoot) {
-		size_t rootobjectindex = rootobjectIDMap.size();
-		rootobjectIDMap[id] = rootobjectindex;
+		rootobjectIDMap[id] = index;
 	}
 	objectIDCounter++;
 }
-
-/*
-Object* Scene::callLoader(const wchar_t* path, ID3D12Device* device)
-{
-	ResourceManager resourceManager(device);
-	Object* loadedObject = resourceManager.LoadModel(path);
-	return loadedObject;
-}
-*/
 
 void Scene::removeObject(Object* object)
 {
@@ -88,6 +78,39 @@ bool Scene::removeCamera(Camera* camera)
 			--mainCameraIndex;
 		}
 		return true;
+	}
+	return false;
+}
+
+void Scene::UpdateWorldTransforms()
+{
+	using namespace DirectX;
+	XMMATRIX identity = XMMatrixIdentity();
+	for (auto rootID : rootobjectIDMap) {
+		uint32_t id = rootID.first;
+		size_t rootIndex = rootID.second;
+
+		if (rootIndex < objects.size())
+		{
+			Object* rootObject = objects[rootIndex];
+			rootObject->UpdateWorldMatrix(identity);
+			UpdateWorldTransformsRecursive(rootObject);
+		}
+	}
+}
+
+void Scene::UpdateWorldTransformsRecursive(Object* parentObject)
+{
+	using namespace DirectX;
+	XMMATRIX parentWorldMatrix = parentObject->worldMatrix;
+	for (size_t childID : parentObject->childrenIDs) {
+		size_t childIndex = objectIDMap.find(childID)->second;
+		if (childIndex < objects.size())
+		{
+			Object* childObject = objects[childIndex];
+			childObject->UpdateWorldMatrix(parentWorldMatrix);
+			UpdateWorldTransformsRecursive(childObject);
+		}
 	}
 }
 

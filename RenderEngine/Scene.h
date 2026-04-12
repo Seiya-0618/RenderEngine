@@ -26,13 +26,15 @@ public:
 
 	void addCamera(Camera* camera);
 	void addObject(Object* object);
-	//Object* callLoader(const wchar_t* path, ID3D12Device* device);
 	void removeObject(Object* object);
+	void UpdateWorldTransforms();
+	void UpdateWorldTransformsRecursive(Object* parentObject);
 	bool removeCamera(Camera* camera);
 	bool changeMainCamera(size_t index);
 	void AddTexture(const std::wstring& name, std::unique_ptr<Texture> texture);
 	Texture* GetTexture(const std::wstring& filepath);
 	uint32_t GetObjectCount() const { return static_cast<uint32_t>(objects.size()); }
+
 
 private:
 	uint32_t objectIDCounter;

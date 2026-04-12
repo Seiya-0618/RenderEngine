@@ -561,7 +561,7 @@ bool DXRenderer::CreateConstantBuffer(Object* obj, UINT cbvSlotIndex)
 		D3D12_RESOURCE_DESC resDesc = {};
 		resDesc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
 		resDesc.Alignment = 0;
-		resDesc.Width = sizeof(Transform);
+		resDesc.Width = sizeof(ObjectConstants);
 		resDesc.Height = 1;
 		resDesc.DepthOrArraySize = 1;
 		resDesc.MipLevels = 1;
@@ -585,9 +585,9 @@ bool DXRenderer::CreateConstantBuffer(Object* obj, UINT cbvSlotIndex)
 		}
 		D3D12_CONSTANT_BUFFER_VIEW_DESC cbvDesc = {};
 		cbvDesc.BufferLocation = buffer->GetGPUVirtualAddress();
-		cbvDesc.SizeInBytes = (sizeof(Transform) + 255) & ~255; //256バイトアラインメント
+		cbvDesc.SizeInBytes = (sizeof(ObjectConstants) + 255) & ~255; //256バイトアラインメント
 		m_pDevice->CreateConstantBufferView(&cbvDesc, handleCPU);
-		Transform* pBuffer = nullptr;
+		ObjectConstants* pBuffer = nullptr;
 		hr = buffer->Map(0, nullptr, reinterpret_cast<void**>(&pBuffer));
 		if (FAILED(hr))
 		{
@@ -612,25 +612,17 @@ bool DXRenderer::CreateConstantBuffer(Object* obj, UINT cbvSlotIndex)
 	return true;
 }
 
-void DXRenderer::UpdateObjects()
+void DXRenderer::UpdateObjectConstants()
 {
-    m_RotateAngle += 0.005f;
-    
-    UINT meshIndex = 0;
-    
-    for (auto* obj : m_Scene->objects)
-    {
-        // rootObjectやCBVがないオブジェクトをスキップ
-        if (obj->vertexBuffers.empty() || obj->cbv[0].buffer == nullptr)
-        {
-            continue;
-        }
+	for (auto* obj : m_Scene->objects)
+	{
+		if (obj->vertexBuffers.empty())
+		{
+			continue;
+		}
 
-        // ✅ メッシュオブジェクトのみ更新
-        obj->cbv[m_FrameIndex].pBuffer->World = DirectX::XMMatrixRotationY(m_RotateAngle);
-        
-        meshIndex++;
-    }
+		obj->cbv[m_FrameIndex].pBuffer->World = obj->worldMatrix;
+	}
 }
 
 void DXRenderer::Render()

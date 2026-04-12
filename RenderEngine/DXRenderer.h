@@ -65,7 +65,7 @@ public:
 	void TermD3D();
 	void WaitGpu();
 	void Present(uint32_t interval);
-	void UpdateObjects();
+	void UpdateObjectConstants();
 	Scene* m_Scene;
 
 	ID3D12Device* GetDevice() const { return m_pDevice.Get(); }
@@ -106,7 +106,7 @@ private:
 	D3D12_DEPTH_STENCIL_DESC m_DSState;
 	D3D12_VIEWPORT m_Viewport;
 	D3D12_RECT m_Scissor;
-	ConstantBufferView<Transform> m_CBV[FrameCount];
+	ConstantBufferView<ObjectConstants> m_CBV[FrameCount];
 	float m_RotateAngle;
 	uint32_t m_Width;
 	uint32_t m_Height;
