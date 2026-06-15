@@ -160,9 +160,16 @@ Object* ResourceManager::LoadModel(const wchar_t* filepath)
 			{
 				std::cout << "No diffuse texture found for material index: " << materialIndex << std::endl;
 			}
+			DXMaterial newMat("Basic", meshObject->GetTextureName(), 0.5f, 0.5f);
+			//newMat.InheritedObjectIDs.push_back(meshObject->objectID);
+			uint32_t materialID = m_pScene->AddMaterial(std::make_unique<DXMaterial>(newMat));
+			meshObject->materialIndex = materialID;
+				
 		}
 
 		m_pScene->addObject(meshObject);
+		DXMaterial* mat = m_pScene->GetMaterial(meshObject->materialIndex);
+		mat->InheritedObjectIDs.push_back(meshObject->objectID);
 		rootObject->AddChild(meshObject);
 	}
 
@@ -243,7 +250,6 @@ Texture* ResourceManager::LoadTexture(const wchar_t* filepath)
 		std::cout << "Failed to create texture resource." << std::endl;
 		return nullptr;
 	}
-	//auto textureDesc = loadedtexture->resource->GetDesc();
 	D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
 	srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
 	srvDesc.Format = texDesc.Format;

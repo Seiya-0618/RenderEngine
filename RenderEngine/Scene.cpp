@@ -142,3 +142,23 @@ Texture* Scene::GetTexture(const std::wstring& filepath)
 	}
 	return nullptr;
 }
+
+uint32_t Scene::AddMaterial(std::unique_ptr<DXMaterial> material)
+{
+	uint32_t id = materialIDCounter;
+	materialMap[id] = std::move(material);
+	materialIDCounter++;
+	return id;
+}
+
+
+
+DXMaterial* Scene::GetMaterial(uint32_t materialID)
+{
+	auto it = materialMap.find(materialID);
+	if (it != materialMap.end())
+	{
+		return it->second.get();
+	}
+	return nullptr;
+}

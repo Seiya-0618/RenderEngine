@@ -7,6 +7,7 @@
 #include <d3dx12.h>
 #include <wrl/client.h>
 #include "Object_win.h"
+#include "DXMaterial.h"
 #include "FileUtil.h"
 #include "Scene.h"
 
@@ -37,16 +38,9 @@ public:
 
 	LoadedModel* GetLoadedModel(const std::wstring& filepath);
 	Texture* GetLoadedTexture(const std::wstring& filepath);
-
 	size_t GetLoadedModelCount() const {
 		return m_loadedModels.size();
 	}
-	/*
-	size_t GetLoadedTextureCoount() const {
-		return m_loadedTextures.size();
-	}
-	*/
-
 	void ClearResources();
 
 private:
@@ -63,6 +57,8 @@ private:
 	static constexpr const wchar_t* TEXTURE_DIRECTORY = L"res/SampleTex/";
 	size_t CBVDescriptorIndex = 0;
 	size_t SRVDescriptorIndex = 0;
+
+	bool BasicPSOCreated = false;
 
 	std::unordered_map<std::wstring, std::unique_ptr<LoadedModel>> m_loadedModels;
 	//std::unordered_map<std::wstring, std::unique_ptr<Texture>> m_loadedTextures;

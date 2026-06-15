@@ -11,25 +11,39 @@
 #pragma comment(lib, "d3dcompiler.lib")
 
 template<typename T> using ComPtr = Microsoft::WRL::ComPtr<T>;
+struct alignas(256) MaterialConstants
+{
+	DirectX::XMFLOAT4 BaseColor;
+	float Roughness;
+	float Metallic;
+	float Padding[2];
+};
 
 class DXMaterial
 {
 public:
-	DXMaterial();
-	~DXMaterial();
+	DXMaterial(std::string pipelineKey,
+		std::wstring texturename,
+		float Roughness,
+		float Metallic)
+		:PipelineKey(pipelineKey),
+		DiffuseMapName(texturename),
+		Roughness(Roughness),
+		Metallic(Metallic)
+	{
+	}
+	~DXMaterial()
+	{
+	}
 
-	ComPtr<ID3D12PipelineState> m_pPSO;
-	std::string DiffuseMapPath;
-	std::vector<size_t> inheritedObjectIDs;
+	std::string PipelineKey;
+	std::wstring DiffuseMapName;
+	std::vector<uint32_t> InheritedObjectIDs;
+	float Roughness;
+	float Metallic;
 
 
 private:
 	ComPtr<ID3D12RootSignature> m_pRootSignature;
-	ComPtr<ID3DBlob> m_pVSBlob;
-	ComPtr<ID3DBlob> m_pPSBlob;
 
-	DirectX::XMFLOAT3 Diffuse;
-	DirectX::XMFLOAT3 Specular;
-	//float Alpha;
-	//float Shininess;
 };

@@ -302,10 +302,6 @@ bool DXRenderer::OnInit()
 
 		//Descriptor Heap
 		{
-			//const UINT objectCount = static_cast<UINT>(m_Scene->objects.size());
-			//const UINT cbvCount = objectCount * FrameCount;
-
-
 
 			//Create CBV
 			const UINT objectCount = static_cast<UINT>(m_Scene->GetObjectCount());
@@ -416,7 +412,7 @@ bool DXRenderer::OnInit()
 		}
 	}
 
-	CreatePipelineStateObject();
+	CreateBasicPSO();
 
 	{
 		//Viewport and ScissorRect
@@ -438,7 +434,7 @@ bool DXRenderer::OnInit()
 	return true;
 }
 
-bool DXRenderer::CreatePipelineStateObject()
+bool DXRenderer::CreateBasicPSO()
 {
 
 	D3D12_INPUT_ELEMENT_DESC elements[3] = {};
@@ -534,6 +530,7 @@ bool DXRenderer::CreatePipelineStateObject()
 		std::cout << "Failed to create Pipeline State Object." << std::endl;
 		return false;
 	}
+	m_Scene->BasicPSOCreated = true;
 	return true;
 }
 
@@ -659,17 +656,20 @@ void DXRenderer::Render()
 			{
 				continue;
 			}
-			Texture* tex = m_Scene->GetTexture(obj->GetTextureName());
-			if (tex)
+			uint32_t matID = obj->materialIndex;
+			DXMaterial* mat = m_Scene->GetMaterial(matID);
+			if (mat)
 			{
-				m_pCmdList->SetGraphicsRootConstantBufferView(0, obj->cbv[m_FrameIndex].buffer->GetGPUVirtualAddress());
-				m_pCmdList->SetGraphicsRootDescriptorTable(1, tex->handleGPU);
-
-				m_pCmdList->IASetVertexBuffers(0, 1, &obj->vertexBuffers[0].view);
-				m_pCmdList->IASetIndexBuffer(&obj->indexBuffers[0].view);
-
-				UINT indexCount = obj->indexBuffers[0].view.SizeInBytes / sizeof(uint32_t);
-				m_pCmdList->DrawIndexedInstanced(indexCount, 1, 0, 0, 0);
+				Texture* tex = m_Scene->GetTexture(mat->DiffuseMapName);
+				if (tex)
+				{
+					m_pCmdList->SetGraphicsRootConstantBufferView(0, obj->cbv[m_FrameIndex].buffer->GetGPUVirtualAddress());
+					m_pCmdList->SetGraphicsRootDescriptorTable(1, tex->handleGPU);
+					m_pCmdList->IASetVertexBuffers(0, 1, &obj->vertexBuffers[0].view);
+					m_pCmdList->IASetIndexBuffer(&obj->indexBuffers[0].view);
+					UINT indexCount = obj->indexBuffers[0].view.SizeInBytes / sizeof(uint32_t);
+					m_pCmdList->DrawIndexedInstanced(indexCount, 1, 0, 0, 0);
+				}
 			}
 		}
 

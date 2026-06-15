@@ -60,6 +60,9 @@ public:
 	bool InitD3D(HWND hwnd);
 	bool OnInit();
 	bool CreatePipelineStateObject();
+	bool CreateBasicPSO();
+	bool CreateLambertPSO();
+	bool CreatePhongPSO();
 	bool CreateConstantBuffer(Object* obj, UINT cbvSlotIndex);
 	void Render();
 	void TermD3D();

@@ -88,6 +88,7 @@ public:
 	std::vector<VertexBuffer> vertexBuffers;
 	std::vector<IndexBuffer> indexBuffers;
 	std::vector<size_t> childrenIDs;
+	uint32_t materialIndex;
 	
 	ObjectConstants constants;
 	ObjectTransform localTransform;
