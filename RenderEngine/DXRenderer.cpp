@@ -316,7 +316,7 @@ bool DXRenderer::OnInit()
 					continue;
 				}
 					bool result = 0;
-					result = CreateConstantBuffer(obj, m_cbvSlotIndex);
+					result = CreateObjectConstantBuffer(obj, m_cbvSlotIndex);
 					if (!result)
 					{
 						std::cout << "Failed to create constant buffer for object." << std::endl;
@@ -534,19 +534,109 @@ bool DXRenderer::CreateBasicPSO()
 	return true;
 }
 
-bool DXRenderer::CreateConstantBuffer(Object* obj, UINT cbvSlotIndex)
+bool DXRenderer::CreateLambertPSO()
 {
-	UINT incrementSize = m_pDevice->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+	D3D12_INPUT_ELEMENT_DESC elements[3] = {};
+	elements[0].SemanticName = "POSITION";
+	elements[0].SemanticIndex = 0;
+	elements[0].Format = DXGI_FORMAT_R32G32B32_FLOAT;
+	elements[0].InputSlot = 0;
+	elements[0].AlignedByteOffset = D3D12_APPEND_ALIGNED_ELEMENT;
+	elements[0].InputSlotClass = D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA;
+	elements[0].InstanceDataStepRate = 0;
+
+	elements[1].SemanticName = "TEXCOORD";
+	elements[1].SemanticIndex = 0;
+	elements[1].Format = DXGI_FORMAT_R32G32_FLOAT;
+	elements[1].InputSlot = 0;
+	elements[1].AlignedByteOffset = D3D12_APPEND_ALIGNED_ELEMENT;
+	elements[1].InputSlotClass = D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA;
+	elements[1].InstanceDataStepRate = 0;
+
+	elements[2].SemanticName = "NORMAL";
+	elements[2].SemanticIndex = 0;
+	elements[2].Format = DXGI_FORMAT_R32G32B32_FLOAT;
+	elements[2].InputSlot = 0;
+	elements[2].AlignedByteOffset = D3D12_APPEND_ALIGNED_ELEMENT;
+	elements[2].InputSlotClass = D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA;
+	elements[2].InstanceDataStepRate = 0;
+
+	D3D12_RASTERIZER_DESC rastDesc = {};
+	rastDesc.FillMode = D3D12_FILL_MODE_SOLID;
+	rastDesc.CullMode = D3D12_CULL_MODE_BACK;
+	rastDesc.FrontCounterClockwise = FALSE;
+	rastDesc.DepthBias = D3D12_DEFAULT_DEPTH_BIAS;
+	rastDesc.DepthBiasClamp = D3D12_DEFAULT_DEPTH_BIAS_CLAMP;
+	rastDesc.SlopeScaledDepthBias = D3D12_DEFAULT_SLOPE_SCALED_DEPTH_BIAS;
+	rastDesc.DepthClipEnable = TRUE;
+	rastDesc.MultisampleEnable = FALSE;
+	rastDesc.AntialiasedLineEnable = FALSE;
+	rastDesc.ForcedSampleCount = 0;
+	rastDesc.ConservativeRaster = D3D12_CONSERVATIVE_RASTERIZATION_MODE_OFF;
+
+	D3D12_RENDER_TARGET_BLEND_DESC blendDesc = {
+		FALSE, FALSE,
+		D3D12_BLEND_ONE, D3D12_BLEND_ZERO, D3D12_BLEND_OP_ADD,
+		D3D12_BLEND_ONE, D3D12_BLEND_ZERO, D3D12_BLEND_OP_ADD,
+		D3D12_LOGIC_OP_NOOP,
+		D3D12_COLOR_WRITE_ENABLE_ALL
+	};
+
+	D3D12_BLEND_DESC descBS;
+	descBS.AlphaToCoverageEnable = FALSE;
+	descBS.IndependentBlendEnable = FALSE;
+	for (UINT i = 0; i < D3D12_SIMULTANEOUS_RENDER_TARGET_COUNT; ++i)
+	{
+		descBS.RenderTarget[i] = blendDesc;
+	}
+
+	ComPtr<ID3DBlob> pVSBlob;
+	ComPtr<ID3DBlob> pPSBlob;
+
+	auto hr = D3DReadFileToBlob(L"LambertVS.cso", pVSBlob.GetAddressOf());
+	if (FAILED(hr))
+	{
+		std::cout << "Failed to load lambert vertex shader." << std::endl;
+		return false;
+	}
+
+	hr = D3DReadFileToBlob(L"LambertPS.cso", pPSBlob.GetAddressOf());
+	if (FAILED(hr))
+	{
+		std::cout << "Failed to load lambert pixel shader." << std::endl;
+		return false;
+	}
+
+	D3D12_GRAPHICS_PIPELINE_STATE_DESC descPSO = {};
+	descPSO.InputLayout = { elements, _countof(elements) };
+	descPSO.pRootSignature = m_pRootSignature.Get();
+	descPSO.VS = { pVSBlob->GetBufferPointer(), pVSBlob->GetBufferSize() };
+	descPSO.PS = { pPSBlob->GetBufferPointer(), pPSBlob->GetBufferSize() };
+	descPSO.RasterizerState = rastDesc;
+	descPSO.BlendState = descBS;
+	descPSO.DepthStencilState.DepthEnable = TRUE;
+	descPSO.DepthStencilState.StencilEnable = FALSE;
+	descPSO.SampleMask = UINT_MAX;
+	descPSO.SampleDesc.Count = 1;
+	descPSO.SampleDesc.Quality = 0;
+
+	return true;
+}
+
+bool DXRenderer::CreateConstantBuffer(UINT CBSize,uint32_t slotIdx, CBV_data(&cbvData)[FrameCount])
+{
 	for (UINT frameIdx = 0; frameIdx < FrameCount; ++frameIdx)
 	{
+		UINT incrementSize = m_pDevice->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
 		CD3DX12_CPU_DESCRIPTOR_HANDLE handleCPU(
 			m_pHeapCBV_SRV_UAV->GetCPUDescriptorHandleForHeapStart(),
-			cbvSlotIndex * FrameCount + frameIdx,
+			slotIdx * FrameCount + frameIdx,
 			incrementSize);
 		CD3DX12_GPU_DESCRIPTOR_HANDLE handleGPU(
 			m_pHeapCBV_SRV_UAV->GetGPUDescriptorHandleForHeapStart(),
-			cbvSlotIndex * FrameCount + frameIdx,
+			slotIdx * FrameCount + frameIdx,
 			incrementSize);
+
 		ComPtr<ID3D12Resource> buffer;
 		D3D12_HEAP_PROPERTIES heapProps = {};
 		heapProps.Type = D3D12_HEAP_TYPE_UPLOAD;
@@ -554,11 +644,11 @@ bool DXRenderer::CreateConstantBuffer(Object* obj, UINT cbvSlotIndex)
 		heapProps.MemoryPoolPreference = D3D12_MEMORY_POOL_UNKNOWN;
 		heapProps.CreationNodeMask = 1;
 		heapProps.VisibleNodeMask = 1;
-
+		
 		D3D12_RESOURCE_DESC resDesc = {};
 		resDesc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
 		resDesc.Alignment = 0;
-		resDesc.Width = sizeof(ObjectConstants);
+		resDesc.Width = (CBSize + 255) & ~255;
 		resDesc.Height = 1;
 		resDesc.DepthOrArraySize = 1;
 		resDesc.MipLevels = 1;
@@ -582,19 +672,38 @@ bool DXRenderer::CreateConstantBuffer(Object* obj, UINT cbvSlotIndex)
 		}
 		D3D12_CONSTANT_BUFFER_VIEW_DESC cbvDesc = {};
 		cbvDesc.BufferLocation = buffer->GetGPUVirtualAddress();
-		cbvDesc.SizeInBytes = (sizeof(ObjectConstants) + 255) & ~255; //256バイトアラインメント
+		cbvDesc.SizeInBytes = (CBSize + 255) & ~255;
 		m_pDevice->CreateConstantBufferView(&cbvDesc, handleCPU);
-		ObjectConstants* pBuffer = nullptr;
-		hr = buffer->Map(0, nullptr, reinterpret_cast<void**>(&pBuffer));
+		void* pBuffer = nullptr;
+		hr = buffer->Map(0, nullptr, &pBuffer);
 		if (FAILED(hr))
 		{
 			std::cout << "Failed to map constant buffer." << std::endl;
 			return false;
 		}
-		obj->cbv[frameIdx].HandleCPU = handleCPU;
-		obj->cbv[frameIdx].HandleGPU = handleGPU;
-		obj->cbv[frameIdx].pBuffer = pBuffer;
-		obj->cbv[frameIdx].buffer = buffer;
+		cbvData[frameIdx].HandleCPU = handleCPU;
+		cbvData[frameIdx].HandleGPU = handleGPU;
+		cbvData[frameIdx].Buffer = buffer;
+		cbvData[frameIdx].mappedBuffer = pBuffer;
+	}
+	return true;
+}
+
+bool DXRenderer::CreateObjectConstantBuffer(Object* obj, UINT cbvSlotIndex)
+{
+	CBV_data cbvData[FrameCount];
+	if(!CreateConstantBuffer(sizeof(ObjectConstants), cbvSlotIndex, cbvData))
+	{
+		std::cout << "Failed to create constant buffer for object." << std::endl;
+		return false;
+	}
+
+	for (UINT frameIdx = 0; frameIdx < FrameCount; ++frameIdx)
+	{
+		obj->cbv[frameIdx].HandleCPU = cbvData[frameIdx].HandleCPU;
+		obj->cbv[frameIdx].HandleGPU = cbvData[frameIdx].HandleGPU;
+		obj->cbv[frameIdx].pBuffer = reinterpret_cast<ObjectConstants*>(cbvData[frameIdx].mappedBuffer);
+		obj->cbv[frameIdx].buffer = cbvData[frameIdx].Buffer;
 
 		auto eyePos = DirectX::XMVectorSet(0.0f, 1.0f, 3.0f, 0.0f);
 		auto targetPos = DirectX::XMVectorSet(0.0f, 0.8f, 0.0f, 0.0f);

@@ -5,6 +5,7 @@
 #include <DirectXMath.h>
 #include <string>
 #include <vector>
+#include "PipelineKey.h"
 
 #pragma comment(lib, "d3d12.lib")
 #pragma comment(lib, "dxgi.lib")
@@ -22,11 +23,11 @@ struct alignas(256) MaterialConstants
 class DXMaterial
 {
 public:
-	DXMaterial(std::string pipelineKey,
+	DXMaterial(PipelineKey pipelineKey,
 		std::wstring texturename,
 		float Roughness,
 		float Metallic)
-		:PipelineKey(pipelineKey),
+		:m_PipelineKey(pipelineKey),
 		DiffuseMapName(texturename),
 		Roughness(Roughness),
 		Metallic(Metallic)
@@ -36,7 +37,7 @@ public:
 	{
 	}
 
-	std::string PipelineKey;
+	PipelineKey m_PipelineKey;
 	std::wstring DiffuseMapName;
 	std::vector<uint32_t> InheritedObjectIDs;
 	float Roughness;

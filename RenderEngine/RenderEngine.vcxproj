@@ -167,6 +167,7 @@
     <ClInclude Include="DXRenderer.h" />
     <ClInclude Include="FileUtil.h" />
     <ClInclude Include="Object_win.h" />
+    <ClInclude Include="Pipelinekey.h" />
     <ClInclude Include="ResourceManager.h" />
     <ClInclude Include="Scene.h" />
     <ClInclude Include="Window.h" />

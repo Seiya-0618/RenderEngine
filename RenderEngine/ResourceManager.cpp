@@ -160,7 +160,7 @@ Object* ResourceManager::LoadModel(const wchar_t* filepath)
 			{
 				std::cout << "No diffuse texture found for material index: " << materialIndex << std::endl;
 			}
-			DXMaterial newMat("Basic", meshObject->GetTextureName(), 0.5f, 0.5f);
+			DXMaterial newMat(PipelineKey::Basic, meshObject->GetTextureName(), 0.5f, 0.5f);
 			//newMat.InheritedObjectIDs.push_back(meshObject->objectID);
 			uint32_t materialID = m_pScene->AddMaterial(std::make_unique<DXMaterial>(newMat));
 			meshObject->materialIndex = materialID;
