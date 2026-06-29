@@ -23,9 +23,6 @@ public:
 	std::vector<Object*> lights;
 	std::vector<Camera*> cameras;
 	size_t mainCameraIndex;
-	bool BasicPSOCreated = false;
-	bool LambertPSOCreated = false;
-	bool PhongPSOCreated = false;
 
 	void addCamera(Camera* camera);
 	void addObject(Object* object);

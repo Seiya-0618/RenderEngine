@@ -85,7 +85,6 @@ private:
 	ComPtr<ID3D12Resource> m_pVB;              //頂点バッファ
 	ComPtr<ID3D12Resource> m_pCB[FrameCount];  //定数バッファ
 	ComPtr<ID3D12RootSignature> m_pRootSignature;
-	ComPtr<ID3D12PipelineState> m_pPSO;
 	std::unordered_map<PipelineKey ,ComPtr<ID3D12PipelineState>> m_PSOMap;
 
 	HANDLE m_FenceEvent;
@@ -98,7 +97,6 @@ private:
 	D3D12_DEPTH_STENCIL_DESC m_DSState;
 	D3D12_VIEWPORT m_Viewport;
 	D3D12_RECT m_Scissor;
-	//ConstantBufferView<ObjectConstants> m_CBV[FrameCount];
 	float m_RotateAngle;
 	uint32_t m_Width;
 	uint32_t m_Height;

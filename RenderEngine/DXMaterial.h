@@ -37,6 +37,10 @@ public:
 	{
 	}
 
+	PipelineKey GetPipelineKey() const {
+		return m_PipelineKey;
+	}
+
 	PipelineKey m_PipelineKey;
 	std::wstring DiffuseMapName;
 	std::vector<uint32_t> InheritedObjectIDs;

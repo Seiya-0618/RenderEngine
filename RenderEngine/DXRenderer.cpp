@@ -28,7 +28,6 @@ DXRenderer::DXRenderer(uint32_t width, uint32_t height, Scene* scene)
 	m_pVB(nullptr),
 	m_pCB{},
 	m_pRootSignature(nullptr),
-	m_pPSO(nullptr),
 	m_Width(width),
 	m_Height(height),
 	m_Texture{},
@@ -413,6 +412,8 @@ bool DXRenderer::OnInit()
 	}
 
 	CreateBasicPSO();
+	bool flag = CreateLambertPSO();
+	std::cout << "CreateLambertPSO() result: " << flag << std::endl;
 
 	{
 		//Viewport and ScissorRect
@@ -524,13 +525,14 @@ bool DXRenderer::CreateBasicPSO()
 	descPSO.SampleDesc.Count = 1;
 	descPSO.SampleDesc.Quality = 0;
 
-	hr = m_pDevice->CreateGraphicsPipelineState(&descPSO, IID_PPV_ARGS(m_pPSO.GetAddressOf()));
+	ComPtr<ID3D12PipelineState> pPSO;
+	hr = m_pDevice->CreateGraphicsPipelineState(&descPSO, IID_PPV_ARGS(pPSO.GetAddressOf()));
 	if (FAILED(hr))
 	{
 		std::cout << "Failed to create Pipeline State Object." << std::endl;
 		return false;
 	}
-	m_Scene->BasicPSOCreated = true;
+	m_PSOMap[PipelineKey::Basic] = pPSO;
 	return true;
 }
 
@@ -563,7 +565,7 @@ bool DXRenderer::CreateLambertPSO()
 
 	D3D12_RASTERIZER_DESC rastDesc = {};
 	rastDesc.FillMode = D3D12_FILL_MODE_SOLID;
-	rastDesc.CullMode = D3D12_CULL_MODE_BACK;
+	rastDesc.CullMode = D3D12_CULL_MODE_FRONT;
 	rastDesc.FrontCounterClockwise = FALSE;
 	rastDesc.DepthBias = D3D12_DEFAULT_DEPTH_BIAS;
 	rastDesc.DepthBiasClamp = D3D12_DEFAULT_DEPTH_BIAS_CLAMP;
@@ -614,11 +616,26 @@ bool DXRenderer::CreateLambertPSO()
 	descPSO.PS = { pPSBlob->GetBufferPointer(), pPSBlob->GetBufferSize() };
 	descPSO.RasterizerState = rastDesc;
 	descPSO.BlendState = descBS;
+	descPSO.DepthStencilState = m_DSState;
 	descPSO.DepthStencilState.DepthEnable = TRUE;
 	descPSO.DepthStencilState.StencilEnable = FALSE;
 	descPSO.SampleMask = UINT_MAX;
+	descPSO.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
+	descPSO.NumRenderTargets = 1;
+	descPSO.RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM_SRGB;
+	descPSO.DSVFormat = DXGI_FORMAT_D32_FLOAT;
 	descPSO.SampleDesc.Count = 1;
 	descPSO.SampleDesc.Quality = 0;
+
+	ComPtr<ID3D12PipelineState> pPSO;
+    hr = m_pDevice->CreateGraphicsPipelineState(&descPSO, IID_PPV_ARGS(pPSO.GetAddressOf()));
+	if (FAILED(hr))
+	{
+		std::cout << "Failed to create Lambert Pipeline State Object. hr=0x"
+		<< std::hex << hr << std::dec << std::endl;
+		return false;
+	}
+	m_PSOMap[PipelineKey::Lambert] = pPSO;
 
 	return true;
 }
@@ -726,7 +743,6 @@ void DXRenderer::UpdateObjectConstants()
 		{
 			continue;
 		}
-
 		obj->cbv[m_FrameIndex].pBuffer->World = obj->worldMatrix;
 	}
 }
@@ -753,7 +769,6 @@ void DXRenderer::Render()
 
 	m_pCmdList->SetDescriptorHeaps(1, m_pHeapCBV_SRV_UAV.GetAddressOf());
 	m_pCmdList->SetGraphicsRootSignature(m_pRootSignature.Get());
-	m_pCmdList->SetPipelineState(m_pPSO.Get());
 	m_pCmdList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 	m_pCmdList->RSSetViewports(1, &m_Viewport);
 	m_pCmdList->RSSetScissorRects(1, &m_Scissor);
@@ -769,6 +784,13 @@ void DXRenderer::Render()
 			DXMaterial* mat = m_Scene->GetMaterial(matID);
 			if (mat)
 			{
+				PipelineKey key = mat->GetPipelineKey();
+				if (m_PSOMap.find(key) == m_PSOMap.end())
+				{
+					std::cout << "Pipeline State Object not found for material: " << std::endl;
+					continue;
+				}
+				m_pCmdList->SetPipelineState(m_PSOMap[key].Get());
 				Texture* tex = m_Scene->GetTexture(mat->DiffuseMapName);
 				if (tex)
 				{
