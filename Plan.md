@@ -20,11 +20,13 @@
 - ✅ Scene による Material 管理
 - ✅ Object から MaterialIndex による Material 参照
 - ✅ Render で Object -> Material -> Texture の経路で描画
+- ✅ PipelineKey に応じた PSO 切り替え
+- ✅ Scene のメインカメラを Renderer が参照
+- ✅ View / Projection を Camera から取得して描画へ反映
 
 ## 現在の課題
-- Material は Scene で管理し Object から参照できるようになったが、PipelineKey による PSO 切り替えはまだ未実装
-- Camera はあるが、描画時には Renderer 内の固定値を使っている
 - Material の質感パラメータは保持しているが、描画にはまだ十分反映されていない
+- Lambert / Phong など追加 PSO は作成できるが、ライティング用パラメータ整理はこれから
 - Renderer, Scene, Object, ResourceManager の責務分担がまだ曖昧
 - Scene 内の Object 管理が `vector + id/index map` 前提になっており、削除時の再構築や責務整理が必要
 - 複数 PSO / Material を前提にした描画順整理（バケット化）が未実装
@@ -42,14 +44,14 @@
 - [x] Object が Material を参照する形に整理する
 - [x] まずはテクスチャ付き基本 Material を 1 つ実装する
 - [x] Render で Object -> Material -> Texture の経路で描画する
-- [ ] PipelineKey に応じて Renderer が PSO を切り替える
+- [x] PipelineKey に応じて Renderer が PSO を切り替える
 - [ ] Material ごとの描画パラメータ反映方法を整理する
 - [ ] 複数 PSO を前提にした描画順の整理を行う
 
 ### 3. Camera の描画系への統合
-- [ ] Scene のメインカメラを Renderer が参照する
-- [ ] View / Projection を Camera から取得する
-- [ ] Renderer 内の固定カメラ値を削減する
+- [x] Scene のメインカメラを Renderer が参照する
+- [x] View / Projection を Camera から取得する
+- [x] Renderer 内の固定カメラ値を削減する
 
 ### 4. 最低限の整理
 - [ ] Transform 定義の整理
@@ -69,11 +71,12 @@
 4. Lambert など追加 PSO の導入
 5. Material パラメータの描画反映
 6. RootSignature の共有範囲整理
+7. Light / Material 用 ConstantBuffer の整理
 
 ### Phase 3
-7. 複数オブジェクト描画の整理
-8. PSO / Material 単位のバケット化
-9. Scene の Object 管理構造の見直し
+8. 複数オブジェクト描画の整理
+9. PSO / Material 単位のバケット化
+10. Scene の Object 管理構造の見直し
 
 ## 技術的な注意点
 - C++14 準拠を維持する
