@@ -31,6 +31,8 @@ public:
 	void UpdateWorldTransformsRecursive(Object* parentObject);
 	bool removeCamera(Camera* camera);
 	bool changeMainCamera(size_t index);
+	DirectX::XMMATRIX GetMainCameraViewMatrix();
+	DirectX::XMMATRIX GetMainCameraProjectionMatrix();
 	void AddTexture(const std::wstring& name, std::unique_ptr<Texture> texture);
 	Texture* GetTexture(const std::wstring& filepath);
 	uint32_t AddMaterial(std::unique_ptr<DXMaterial> material);

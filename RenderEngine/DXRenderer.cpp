@@ -272,7 +272,6 @@ bool DXRenderer::InitD3D(HWND hwnd)
 
 	D3D12_DESCRIPTOR_HEAP_DESC heapDesc = {};
 	heapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
-	//heapDesc.NumDescriptors = cbvCount + 1;  //ShaderResourceViewで1つ
 	heapDesc.NumDescriptors = maxCBVCount * FrameCount + maxTextureCount;
 	heapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
 	heapDesc.NodeMask = 0;
@@ -411,8 +410,9 @@ bool DXRenderer::OnInit()
 		}
 	}
 
-	CreateBasicPSO();
-	bool flag = CreateLambertPSO();
+	bool flag = CreateBasicPSO();
+	std::cout << "CreateBasicPSO() result: " << flag << std::endl;
+	flag = CreateLambertPSO();
 	std::cout << "CreateLambertPSO() result: " << flag << std::endl;
 
 	{
@@ -498,7 +498,7 @@ bool DXRenderer::CreateBasicPSO()
 	if (FAILED(hr))
 	{
 		std::cout << "Failed to load vertex shader." << std::endl;
-		//return false;
+		return false;
 	}
 	hr = D3DReadFileToBlob(L"SimpleTexPS.cso", pPSBlob.GetAddressOf());
 	if (FAILED(hr))
@@ -721,22 +721,14 @@ bool DXRenderer::CreateObjectConstantBuffer(Object* obj, UINT cbvSlotIndex)
 		obj->cbv[frameIdx].HandleGPU = cbvData[frameIdx].HandleGPU;
 		obj->cbv[frameIdx].pBuffer = reinterpret_cast<ObjectConstants*>(cbvData[frameIdx].mappedBuffer);
 		obj->cbv[frameIdx].buffer = cbvData[frameIdx].Buffer;
-
-		auto eyePos = DirectX::XMVectorSet(0.0f, 1.0f, 3.0f, 0.0f);
-		auto targetPos = DirectX::XMVectorSet(0.0f, 0.8f, 0.0f, 0.0f);
-		auto upward = DirectX::XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);
-		auto fovY = DirectX::XMConvertToRadians(37.5f);
-		auto aspect = static_cast<float>(m_Width) / static_cast<float>(m_Height);
-
-		obj->cbv[frameIdx].pBuffer->World = DirectX::XMMatrixIdentity();
-		obj->cbv[frameIdx].pBuffer->View = DirectX::XMMatrixLookAtRH(eyePos, targetPos, upward);
-		obj->cbv[frameIdx].pBuffer->Projection = DirectX::XMMatrixPerspectiveFovRH(fovY, aspect, 0.1f, 100.0f);
 	}
 	return true;
 }
 
 void DXRenderer::UpdateObjectConstants()
 {
+	DirectX::XMMATRIX view = m_Scene->GetMainCameraViewMatrix();
+	DirectX::XMMATRIX proj = m_Scene->GetMainCameraProjectionMatrix();
 	for (auto* obj : m_Scene->objects)
 	{
 		if (obj->vertexBuffers.empty())
@@ -744,6 +736,8 @@ void DXRenderer::UpdateObjectConstants()
 			continue;
 		}
 		obj->cbv[m_FrameIndex].pBuffer->World = obj->worldMatrix;
+		obj->cbv[m_FrameIndex].pBuffer->View = view;
+		obj->cbv[m_FrameIndex].pBuffer->Projection = proj;
 	}
 }
 

@@ -5,8 +5,8 @@ class Camera
 {
 public:
     Camera(float aspect, float nearZ = 0.1f, float farZ = 100.0f)
-        : position(0.0f, 0.0f, -5.0f),
-        target(0.0f, 0.0f, 0.0f),
+        : position(0.0f, 1.0f, -2.0f),
+        target(0.0f, 0.8f, 0.0f),
         up(0.0f, 1.0f, 0.0f),
         aspectRatio(aspect),
         nearPlane(nearZ),

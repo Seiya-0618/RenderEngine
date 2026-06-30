@@ -123,6 +123,28 @@ bool Scene::changeMainCamera(size_t index)
 	else return false;
 }
 
+DirectX::XMMATRIX Scene::GetMainCameraViewMatrix()
+{
+	if (mainCameraIndex < cameras.size()) {
+		return cameras[mainCameraIndex]->GetViewMatrix();
+	}
+	else {
+		std::cout << "Main camera index is out of range." << std::endl;
+		return DirectX::XMMatrixIdentity();
+	}
+}
+
+DirectX::XMMATRIX Scene::GetMainCameraProjectionMatrix()
+{
+	if (mainCameraIndex < cameras.size()) {
+		return cameras[mainCameraIndex]->GetProjectionMatrix();
+	}
+	else {
+		std::cout << "Main camera index is out of range." << std::endl;
+		return DirectX::XMMatrixIdentity();
+	}
+}
+
 void Scene::AddTexture(const std::wstring& name, std::unique_ptr<Texture> texture)
 {
 	if (textureMap.find(name) != textureMap.end())
