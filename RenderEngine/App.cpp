@@ -69,6 +69,7 @@ void App::MainLoop()
 		{
 			UpdateObjects();
 			mainScene->UpdateWorldTransforms();
+			m_renderer->UpdateCameraConstants();
 			m_renderer->UpdateObjectConstants();
 			m_renderer->Render();
 		}

@@ -55,8 +55,8 @@ struct ObjectTransform
 struct alignas(256) ObjectConstants
 {
 	DirectX::XMMATRIX World;
-	DirectX::XMMATRIX View;
-	DirectX::XMMATRIX Projection;
+	//DirectX::XMMATRIX View;
+	//DirectX::XMMATRIX Projection;
 };
 
 struct ObjectCBVInfo {

@@ -306,6 +306,16 @@ bool DXRenderer::OnInit()
 			UINT incrementSize = m_pDevice->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
 			auto handleCPU = m_pHeapCBV_SRV_UAV->GetCPUDescriptorHandleForHeapStart();
 			auto handleGPU = m_pHeapCBV_SRV_UAV->GetGPUDescriptorHandleForHeapStart();
+			{
+				Camera* mainCamera = m_Scene->cameras[m_Scene->mainCameraIndex];
+				bool result = CreateCameraConstantBuffer(mainCamera, m_cbvSlotIndex);
+				if (!result)
+				{
+					std::cout << "Failed to create constant buffer for camera." << std::endl;
+					return false;
+				}
+				m_cbvSlotIndex++;
+			}
 			for (Object* obj : m_Scene->objects)
 			{
 				if (obj->vertexBuffers.empty() || obj->indexBuffers.empty())
@@ -336,24 +346,28 @@ bool DXRenderer::OnInit()
 		flag |= D3D12_ROOT_SIGNATURE_FLAG_DENY_HULL_SHADER_ROOT_ACCESS;
 		flag |= D3D12_ROOT_SIGNATURE_FLAG_DENY_GEOMETRY_SHADER_ROOT_ACCESS;
 
-		D3D12_ROOT_PARAMETER rootParam[2] = {};
-		rootParam[0].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
+		D3D12_ROOT_PARAMETER rootParam[3] = {};
+		rootParam[0].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;  //Camera CBV
 		rootParam[0].Descriptor.ShaderRegister = 0;
 		rootParam[0].Descriptor.RegisterSpace = 0;
 		rootParam[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
 
-		D3D12_DESCRIPTOR_RANGE range = {};
+		rootParam[1].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;  //Object CBV
+		rootParam[1].Descriptor.ShaderRegister = 1;
+		rootParam[1].Descriptor.RegisterSpace = 0;
+		rootParam[1].ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
 
+		D3D12_DESCRIPTOR_RANGE range = {};
 		range.RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
 		range.NumDescriptors = 1;
 		range.BaseShaderRegister = 0;
 		//range.RegisterSpace = 0;
 		range.OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
 
-		rootParam[1].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
-		rootParam[1].DescriptorTable.NumDescriptorRanges = 1;
-		rootParam[1].DescriptorTable.pDescriptorRanges = &range;
-		rootParam[1].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
+		rootParam[2].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
+		rootParam[2].DescriptorTable.NumDescriptorRanges = 1;
+		rootParam[2].DescriptorTable.pDescriptorRanges = &range;
+		rootParam[2].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
 
 		D3D12_STATIC_SAMPLER_DESC samplerDesc = {};
 		samplerDesc.Filter = D3D12_FILTER_MIN_MAG_MIP_LINEAR;
@@ -373,7 +387,7 @@ bool DXRenderer::OnInit()
 
 
 		D3D12_ROOT_SIGNATURE_DESC rootDesc = {};
-		rootDesc.NumParameters = 2;
+		rootDesc.NumParameters = 3;
 		rootDesc.NumStaticSamplers = 1;
 		rootDesc.pParameters = rootParam;
 		rootDesc.pStaticSamplers = &samplerDesc;
@@ -725,6 +739,25 @@ bool DXRenderer::CreateObjectConstantBuffer(Object* obj, UINT cbvSlotIndex)
 	return true;
 }
 
+bool DXRenderer::CreateCameraConstantBuffer(Camera* camera, UINT cbvSlotIndex)
+{
+	CBV_data cbvData[FrameCount];
+	if (!CreateConstantBuffer(sizeof(CameraConstants), cbvSlotIndex, cbvData))
+	{
+		std::cout << "Failed to create constant buffer for camera." << std::endl;
+		return false;
+	}
+
+	for (UINT frameIdx = 0; frameIdx < FrameCount; ++frameIdx)
+	{
+		camera->cbv[frameIdx].HandleCPU = cbvData[frameIdx].HandleCPU;
+		camera->cbv[frameIdx].HandleGPU = cbvData[frameIdx].HandleGPU;
+		camera->cbv[frameIdx].pBuffer = reinterpret_cast<CameraConstants*>(cbvData[frameIdx].mappedBuffer);
+		camera->cbv[frameIdx].buffer = cbvData[frameIdx].Buffer;
+	}
+	return true;
+}
+
 void DXRenderer::UpdateObjectConstants()
 {
 	DirectX::XMMATRIX view = m_Scene->GetMainCameraViewMatrix();
@@ -736,9 +769,18 @@ void DXRenderer::UpdateObjectConstants()
 			continue;
 		}
 		obj->cbv[m_FrameIndex].pBuffer->World = obj->worldMatrix;
-		obj->cbv[m_FrameIndex].pBuffer->View = view;
-		obj->cbv[m_FrameIndex].pBuffer->Projection = proj;
+		//obj->cbv[m_FrameIndex].pBuffer->View = view;
+		//obj->cbv[m_FrameIndex].pBuffer->Projection = proj;
 	}
+}
+
+void DXRenderer::UpdateCameraConstants()
+{
+	DirectX::XMMATRIX view = m_Scene->GetMainCameraViewMatrix();
+	DirectX::XMMATRIX proj = m_Scene->GetMainCameraProjectionMatrix();
+	Camera* camera = m_Scene->cameras[m_Scene->mainCameraIndex];
+	camera->cbv[m_FrameIndex].pBuffer->View = view;
+	camera->cbv[m_FrameIndex].pBuffer->Projection = proj;
 }
 
 void DXRenderer::Render()
@@ -761,8 +803,10 @@ void DXRenderer::Render()
 	m_pCmdList->ClearRenderTargetView(m_HandleRTV[m_FrameIndex], clearColor, 0, nullptr);
 	m_pCmdList->ClearDepthStencilView(m_HandleDSV, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
 
+
 	m_pCmdList->SetDescriptorHeaps(1, m_pHeapCBV_SRV_UAV.GetAddressOf());
 	m_pCmdList->SetGraphicsRootSignature(m_pRootSignature.Get());
+	m_pCmdList->SetGraphicsRootConstantBufferView(0, m_Scene->cameras[m_Scene->mainCameraIndex]->cbv[m_FrameIndex].buffer->GetGPUVirtualAddress()); //Camera CBV
 	m_pCmdList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 	m_pCmdList->RSSetViewports(1, &m_Viewport);
 	m_pCmdList->RSSetScissorRects(1, &m_Scissor);
@@ -788,8 +832,8 @@ void DXRenderer::Render()
 				Texture* tex = m_Scene->GetTexture(mat->DiffuseMapName);
 				if (tex)
 				{
-					m_pCmdList->SetGraphicsRootConstantBufferView(0, obj->cbv[m_FrameIndex].buffer->GetGPUVirtualAddress());
-					m_pCmdList->SetGraphicsRootDescriptorTable(1, tex->handleGPU);
+					m_pCmdList->SetGraphicsRootConstantBufferView(1, obj->cbv[m_FrameIndex].buffer->GetGPUVirtualAddress()); //Object CBV
+					m_pCmdList->SetGraphicsRootDescriptorTable(2, tex->handleGPU);
 					m_pCmdList->IASetVertexBuffers(0, 1, &obj->vertexBuffers[0].view);
 					m_pCmdList->IASetIndexBuffer(&obj->indexBuffers[0].view);
 					UINT indexCount = obj->indexBuffers[0].view.SizeInBytes / sizeof(uint32_t);

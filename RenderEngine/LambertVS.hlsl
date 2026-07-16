@@ -10,11 +10,15 @@ struct VSOutput
     float2 TexCoord : TEXCOORD;
 };
 
-cbuffer Transform : register(b0)
+cbuffer CameraTransform : register(b0)
+{
+    float4x4 View : packoffset(c0);
+    float4x4 Projection : packoffset(c4);
+}
+
+cbuffer ObjectTransform : register(b1)
 {
     float4x4 World : packoffset(c0);
-    float4x4 View : packoffset(c4);
-    float4x4 Projection : packoffset(c8);
 }
 
 VSOutput main(VSInput input)

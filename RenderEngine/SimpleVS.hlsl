@@ -10,14 +10,16 @@ struct VSOutput
     float4 Color : COLOR;
 };
 
-cbuffer Transform : register(b0)
+cbuffer CameraTransform : register(b0)
 {
-    float4x4 World : packoffset(c0);
-    float4x4 View : packoffset(c4);
-    float4x4 Projection : packoffset(c8);
+    float4x4 View : packoffset(c0);
+    float4x4 Projection : packoffset(c4);
 }
 
-
+cbuffer ObjectTransform : register(b1)
+{
+    float4x4 World : packoffset(c0);
+}
 
 VSOutput main( VSInput input )
 {

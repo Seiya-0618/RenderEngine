@@ -45,17 +45,19 @@ public:
 	~DXRenderer();
 	bool InitD3D(HWND hwnd);
 	bool OnInit();
-	bool CreatePipelineStateObject();
+	//bool CreatePipelineStateObject();
 	bool CreateBasicPSO();
 	bool CreateLambertPSO();
 	bool CreatePhongPSO();
 	bool CreateConstantBuffer(UINT CBSize, uint32_t slotIdx, CBV_data(&cbvData)[FrameCount]);
 	bool CreateObjectConstantBuffer(Object* obj, UINT cbvSlotIndex);
+	bool CreateCameraConstantBuffer(Camera* camera, UINT cbvSlotIndex);
 	void Render();
 	void TermD3D();
 	void WaitGpu();
 	void Present(uint32_t interval);
 	void UpdateObjectConstants();
+	void UpdateCameraConstants();
 	Scene* m_Scene;
 
 	ID3D12Device* GetDevice() const { return m_pDevice.Get(); }
