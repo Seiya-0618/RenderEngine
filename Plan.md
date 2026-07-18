@@ -23,10 +23,14 @@
 - ✅ PipelineKey に応じた PSO 切り替え
 - ✅ Scene のメインカメラを Renderer が参照
 - ✅ View / Projection を Camera から取得して描画へ反映
+- ✅ Camera 用 ConstantBuffer を分離
+- ✅ ObjectConstants を World のみへ整理
+- ✅ CameraConstants を導入して Camera 行列を別 CB で管理
 
 ## 現在の課題
 - Material の質感パラメータは保持しているが、描画にはまだ十分反映されていない
 - Lambert / Phong など追加 PSO は作成できるが、ライティング用パラメータ整理はこれから
+- Light の定義は着手したが、描画系への統合は未完了
 - Renderer, Scene, Object, ResourceManager の責務分担がまだ曖昧
 - Scene 内の Object 管理が `vector + id/index map` 前提になっており、削除時の再構築や責務整理が必要
 - 複数 PSO / Material を前提にした描画順整理（バケット化）が未実装
@@ -52,8 +56,15 @@
 - [x] Scene のメインカメラを Renderer が参照する
 - [x] View / Projection を Camera から取得する
 - [x] Renderer 内の固定カメラ値を削減する
+- [x] Camera 用 ConstantBuffer を分離する
 
-### 4. 最低限の整理
+### 4. Light の導入
+- [x] DirectionalLight の定義を作成する
+- [ ] Scene に Light を保持する形へ整理する
+- [ ] Light 用 ConstantBuffer を作成する
+- [ ] Lambert で Light を使ったライティングを行う
+
+### 5. 最低限の整理
 - [ ] Transform 定義の整理
 - [ ] Object, Scene, Renderer の責務を整理
 - [ ] リソース管理の役割を明確にする
@@ -66,17 +77,19 @@
 1. PipelineKey による PSO 切り替え
 2. Scene のメインカメラを描画へ接続
 3. Renderer の固定カメラ値を削減
+4. Camera 用 ConstantBuffer の分離
 
 ### Phase 2
-4. Lambert など追加 PSO の導入
-5. Material パラメータの描画反映
-6. RootSignature の共有範囲整理
-7. Light / Material 用 ConstantBuffer の整理
+5. Lambert など追加 PSO の導入
+6. Light / Material 用 ConstantBuffer の整理
+7. Lambert へのライト反映
+8. Material パラメータの描画反映
+9. RootSignature の共有範囲整理
 
 ### Phase 3
-8. 複数オブジェクト描画の整理
-9. PSO / Material 単位のバケット化
-10. Scene の Object 管理構造の見直し
+10. 複数オブジェクト描画の整理
+11. PSO / Material 単位のバケット化
+12. Scene の Object 管理構造の見直し
 
 ## 技術的な注意点
 - C++14 準拠を維持する
