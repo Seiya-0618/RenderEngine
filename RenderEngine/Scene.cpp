@@ -3,7 +3,6 @@
 Scene::Scene(float camwidth, float camheight, float camnear, float camfar)
 	:objects(),
 	rootobjectIDMap(),
-	lights(),
 	objectIDCounter(0)
 	//rootObjectIDCounter(0)
 {
@@ -17,17 +16,37 @@ Scene::~Scene()
 	for (auto& camera : cameras) {
 		delete camera;
 	}
-	//for (auto& object : objects) {
-	//	delete object;
-	//}
-	for (auto& light : lights) {
-		delete light;
-	}
+
 }
 
 void Scene::addCamera(Camera* camera)
 {
 	cameras.push_back(camera);
+}
+
+bool Scene::removeCamera(Camera* camera)
+{
+	auto it = std::find(cameras.begin(), cameras.end(), camera);
+	if (cameras.size() <= 1) {
+		std::cout << "at least one camera" << std::endl;
+		return false;
+	}
+	if (it == cameras.end()) {
+		std::cout << "Camera not found in scene." << std::endl;
+		return false;
+	}
+	if (it != cameras.end()) {
+		auto index = std::distance(cameras.begin(), it);
+		cameras.erase(it);
+		if (mainCameraIndex == index) {
+			mainCameraIndex = 0;
+		}
+		else if (mainCameraIndex > index) {
+			--mainCameraIndex;
+		}
+		return true;
+	}
+	return false;
 }
 
 void Scene::addObject(Object* object)
@@ -57,29 +76,17 @@ void Scene::removeObject(Object* object)
 	delete object;
 }
 
-bool Scene::removeCamera(Camera* camera)
+bool Scene::addDirectionalLight(DirectionalLight light)
 {
-	auto it = std::find(cameras.begin(), cameras.end(), camera);
-	if (cameras.size() <= 1) {
-		std::cout << "at least one camera" << std::endl;
+	uint32_t id = directionalLightIDCounter;
+	directionalLights.push_back(std::make_unique<DirectionalLight>(light));
+	if (directionalLights.size() < directionalLightIDCounter)
+	{
+		std::cout << "failed to add directionalLight" << std::endl;
 		return false;
 	}
-	if (it == cameras.end()) {
-		std::cout << "Camera not found in scene." << std::endl;
-		return false;
-	}
-	if (it != cameras.end()) {
-		auto index = std::distance(cameras.begin(), it);
-		cameras.erase(it);
-		if (mainCameraIndex == index) {
-			mainCameraIndex = 0;
-		}
-		else if (mainCameraIndex > index) {
-			--mainCameraIndex;
-		}
-		return true;
-	}
-	return false;
+	directionalLightIDCounter++;
+	return true;
 }
 
 void Scene::UpdateWorldTransforms()

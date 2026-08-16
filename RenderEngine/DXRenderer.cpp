@@ -308,13 +308,12 @@ bool DXRenderer::OnInit()
 			auto handleGPU = m_pHeapCBV_SRV_UAV->GetGPUDescriptorHandleForHeapStart();
 			{
 				Camera* mainCamera = m_Scene->cameras[m_Scene->mainCameraIndex];
-				bool result = CreateCameraConstantBuffer(mainCamera, m_cbvSlotIndex);
+				bool result = CreateCameraConstantBuffer(mainCamera);
 				if (!result)
 				{
 					std::cout << "Failed to create constant buffer for camera." << std::endl;
 					return false;
 				}
-				m_cbvSlotIndex++;
 			}
 			for (Object* obj : m_Scene->objects)
 			{
@@ -324,13 +323,12 @@ bool DXRenderer::OnInit()
 					continue;
 				}
 					bool result = 0;
-					result = CreateObjectConstantBuffer(obj, m_cbvSlotIndex);
+					result = CreateObjectConstantBuffer(obj);
 					if (!result)
 					{
 						std::cout << "Failed to create constant buffer for object." << std::endl;
 						return false;
 					}
-				m_cbvSlotIndex++;
 				if (m_cbvSlotIndex >= maxCBVCount)
 				{
 					std::cout << "Exceeded maximum CBV count." << std::endl;
@@ -346,7 +344,7 @@ bool DXRenderer::OnInit()
 		flag |= D3D12_ROOT_SIGNATURE_FLAG_DENY_HULL_SHADER_ROOT_ACCESS;
 		flag |= D3D12_ROOT_SIGNATURE_FLAG_DENY_GEOMETRY_SHADER_ROOT_ACCESS;
 
-		D3D12_ROOT_PARAMETER rootParam[3] = {};
+		D3D12_ROOT_PARAMETER rootParam[4] = {};
 		rootParam[0].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;  //Camera CBV
 		rootParam[0].Descriptor.ShaderRegister = 0;
 		rootParam[0].Descriptor.RegisterSpace = 0;
@@ -357,6 +355,11 @@ bool DXRenderer::OnInit()
 		rootParam[1].Descriptor.RegisterSpace = 0;
 		rootParam[1].ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
 
+		rootParam[2].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV; //Light CBV
+		rootParam[2].Descriptor.ShaderRegister = 2;
+		rootParam[2].Descriptor.RegisterSpace = 0;
+		rootParam[2].ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
+
 		D3D12_DESCRIPTOR_RANGE range = {};
 		range.RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
 		range.NumDescriptors = 1;
@@ -364,10 +367,10 @@ bool DXRenderer::OnInit()
 		//range.RegisterSpace = 0;
 		range.OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
 
-		rootParam[2].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
-		rootParam[2].DescriptorTable.NumDescriptorRanges = 1;
-		rootParam[2].DescriptorTable.pDescriptorRanges = &range;
-		rootParam[2].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
+		rootParam[3].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
+		rootParam[3].DescriptorTable.NumDescriptorRanges = 1;
+		rootParam[3].DescriptorTable.pDescriptorRanges = &range;
+		rootParam[3].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
 
 		D3D12_STATIC_SAMPLER_DESC samplerDesc = {};
 		samplerDesc.Filter = D3D12_FILTER_MIN_MAG_MIP_LINEAR;
@@ -387,7 +390,7 @@ bool DXRenderer::OnInit()
 
 
 		D3D12_ROOT_SIGNATURE_DESC rootDesc = {};
-		rootDesc.NumParameters = 3;
+		rootDesc.NumParameters = _countof(rootParam);
 		rootDesc.NumStaticSamplers = 1;
 		rootDesc.pParameters = rootParam;
 		rootDesc.pStaticSamplers = &samplerDesc;
@@ -654,8 +657,9 @@ bool DXRenderer::CreateLambertPSO()
 	return true;
 }
 
-bool DXRenderer::CreateConstantBuffer(UINT CBSize,uint32_t slotIdx, CBV_data(&cbvData)[FrameCount])
+bool DXRenderer::CreateConstantBuffer(UINT CBSize, CBV_data(&cbvData)[FrameCount])
 {
+	uint32_t slotIdx = m_cbvSlotIndex;
 	for (UINT frameIdx = 0; frameIdx < FrameCount; ++frameIdx)
 	{
 		UINT incrementSize = m_pDevice->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
@@ -717,13 +721,14 @@ bool DXRenderer::CreateConstantBuffer(UINT CBSize,uint32_t slotIdx, CBV_data(&cb
 		cbvData[frameIdx].Buffer = buffer;
 		cbvData[frameIdx].mappedBuffer = pBuffer;
 	}
+	m_cbvSlotIndex++;
 	return true;
 }
 
-bool DXRenderer::CreateObjectConstantBuffer(Object* obj, UINT cbvSlotIndex)
+bool DXRenderer::CreateObjectConstantBuffer(Object* obj)
 {
 	CBV_data cbvData[FrameCount];
-	if(!CreateConstantBuffer(sizeof(ObjectConstants), cbvSlotIndex, cbvData))
+	if(!CreateConstantBuffer(sizeof(ObjectConstants), cbvData))
 	{
 		std::cout << "Failed to create constant buffer for object." << std::endl;
 		return false;
@@ -739,10 +744,10 @@ bool DXRenderer::CreateObjectConstantBuffer(Object* obj, UINT cbvSlotIndex)
 	return true;
 }
 
-bool DXRenderer::CreateCameraConstantBuffer(Camera* camera, UINT cbvSlotIndex)
+bool DXRenderer::CreateCameraConstantBuffer(Camera* camera)
 {
 	CBV_data cbvData[FrameCount];
-	if (!CreateConstantBuffer(sizeof(CameraConstants), cbvSlotIndex, cbvData))
+	if (!CreateConstantBuffer(sizeof(CameraConstants), cbvData))
 	{
 		std::cout << "Failed to create constant buffer for camera." << std::endl;
 		return false;
@@ -754,6 +759,24 @@ bool DXRenderer::CreateCameraConstantBuffer(Camera* camera, UINT cbvSlotIndex)
 		camera->cbv[frameIdx].HandleGPU = cbvData[frameIdx].HandleGPU;
 		camera->cbv[frameIdx].pBuffer = reinterpret_cast<CameraConstants*>(cbvData[frameIdx].mappedBuffer);
 		camera->cbv[frameIdx].buffer = cbvData[frameIdx].Buffer;
+	}
+	return true;
+}
+
+bool DXRenderer::CreateDirectionalLightConstantBuffer(DirectionalLight* light)
+{
+	CBV_data cbvData[FrameCount];
+	if (!CreateConstantBuffer(sizeof(DirectionalLightConstants), cbvData))
+	{
+		std::cout << "Failed to create constant buffer for directional light." << std::endl;
+		return false;
+	}
+	for (UINT frameIdx = 0; frameIdx < FrameCount; ++frameIdx)
+	{
+		light->cbv[frameIdx].HandleCPU = cbvData[frameIdx].HandleCPU;
+		light->cbv[frameIdx].HandleGPU = cbvData[frameIdx].HandleGPU;
+		light->cbv[frameIdx].pBuffer = reinterpret_cast<DirectionalLightConstants*>(cbvData[frameIdx].mappedBuffer);
+		light->cbv[frameIdx].buffer = cbvData[frameIdx].Buffer;
 	}
 	return true;
 }
@@ -783,6 +806,23 @@ void DXRenderer::UpdateCameraConstants()
 	camera->cbv[m_FrameIndex].pBuffer->Projection = proj;
 }
 
+void DXRenderer::UpdateLightConstants()
+{
+	UpdateDirectionalLightConstants();
+}
+
+void DXRenderer::UpdateDirectionalLightConstants()
+{
+	for(auto& light : m_Scene->directionalLights)
+	{
+		DirectionalLight* dirLight = light.get();
+		DirectionalLightConstants* lightConstants = dirLight->cbv[m_FrameIndex].pBuffer;
+		lightConstants->direction = dirLight->direction;
+		lightConstants->color = dirLight->color;
+		lightConstants->intensity = dirLight->intensity;
+	}
+}
+
 void DXRenderer::Render()
 {
 	m_pCmdAllocator[m_FrameIndex]->Reset();
@@ -807,6 +847,7 @@ void DXRenderer::Render()
 	m_pCmdList->SetDescriptorHeaps(1, m_pHeapCBV_SRV_UAV.GetAddressOf());
 	m_pCmdList->SetGraphicsRootSignature(m_pRootSignature.Get());
 	m_pCmdList->SetGraphicsRootConstantBufferView(0, m_Scene->cameras[m_Scene->mainCameraIndex]->cbv[m_FrameIndex].buffer->GetGPUVirtualAddress()); //Camera CBV
+	m_pCmdList->SetGraphicsRootConstantBufferView(2, m_Scene->directionalLights[0]->cbv[m_FrameIndex].buffer->GetGPUVirtualAddress()); //Light CBV
 	m_pCmdList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 	m_pCmdList->RSSetViewports(1, &m_Viewport);
 	m_pCmdList->RSSetScissorRects(1, &m_Scissor);
@@ -833,7 +874,7 @@ void DXRenderer::Render()
 				if (tex)
 				{
 					m_pCmdList->SetGraphicsRootConstantBufferView(1, obj->cbv[m_FrameIndex].buffer->GetGPUVirtualAddress()); //Object CBV
-					m_pCmdList->SetGraphicsRootDescriptorTable(2, tex->handleGPU);
+					m_pCmdList->SetGraphicsRootDescriptorTable(3, tex->handleGPU);
 					m_pCmdList->IASetVertexBuffers(0, 1, &obj->vertexBuffers[0].view);
 					m_pCmdList->IASetIndexBuffer(&obj->indexBuffers[0].view);
 					UINT indexCount = obj->indexBuffers[0].view.SizeInBytes / sizeof(uint32_t);

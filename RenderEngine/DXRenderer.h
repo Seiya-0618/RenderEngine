@@ -49,15 +49,18 @@ public:
 	bool CreateBasicPSO();
 	bool CreateLambertPSO();
 	bool CreatePhongPSO();
-	bool CreateConstantBuffer(UINT CBSize, uint32_t slotIdx, CBV_data(&cbvData)[FrameCount]);
-	bool CreateObjectConstantBuffer(Object* obj, UINT cbvSlotIndex);
-	bool CreateCameraConstantBuffer(Camera* camera, UINT cbvSlotIndex);
+	bool CreateConstantBuffer(UINT CBSize, CBV_data(&cbvData)[FrameCount]);
+	bool CreateObjectConstantBuffer(Object* obj);
+	bool CreateCameraConstantBuffer(Camera* camera);
+	bool CreateDirectionalLightConstantBuffer(DirectionalLight* light);
 	void Render();
 	void TermD3D();
 	void WaitGpu();
 	void Present(uint32_t interval);
 	void UpdateObjectConstants();
 	void UpdateCameraConstants();
+	void UpdateLightConstants();
+	void UpdateDirectionalLightConstants();
 	Scene* m_Scene;
 
 	ID3D12Device* GetDevice() const { return m_pDevice.Get(); }

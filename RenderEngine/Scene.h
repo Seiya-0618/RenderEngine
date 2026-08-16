@@ -5,6 +5,7 @@
 #include "Object_win.h"
 #include "Camera.h"
 #include "DXMaterial.h"
+#include "Light.h"
 //#include "ModelLoader.h"
 //#include "ResourceManager.h"
 
@@ -20,16 +21,20 @@ public:
 	std::unordered_map<std::wstring, std::unique_ptr<Texture>> textureMap;
 	std::unordered_map<uint32_t, std::unique_ptr<DXMaterial>> materialMap;
 
-	std::vector<Object*> lights;
+	//std::map<uint32_t, std::unique_ptr<DirectionalLight>> directionalLights;
+	std::vector<std::unique_ptr<DirectionalLight>> directionalLights;
 	std::vector<Camera*> cameras;
 	size_t mainCameraIndex;
 
 	void addCamera(Camera* camera);
+	//void removeCamera(Camera* camera);
+	bool removeCamera(Camera* camera);
 	void addObject(Object* object);
 	void removeObject(Object* object);
+	bool addDirectionalLight(DirectionalLight light);
 	void UpdateWorldTransforms();
 	void UpdateWorldTransformsRecursive(Object* parentObject);
-	bool removeCamera(Camera* camera);
+
 	bool changeMainCamera(size_t index);
 	DirectX::XMMATRIX GetMainCameraViewMatrix();
 	DirectX::XMMATRIX GetMainCameraProjectionMatrix();
@@ -43,5 +48,6 @@ public:
 private:
 	uint32_t objectIDCounter;
 	uint32_t materialIDCounter;
+	uint32_t directionalLightIDCounter;
 
 };

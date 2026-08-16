@@ -1,39 +1,52 @@
 #pragma once
 #include <d3d12.h>
 #include <DirectXMath.h>
+#include <wrl.h>
+#include <vector>
 
-enum class LightType
+struct alignas(256) DirectionalLightConstants
 {
-	Directional,
-	Point,
-	Spot
-};
-
-class Light
-{
-public:
-	Light(DirectX::XMFLOAT3 color, float intensity)
-		: color(color), intensity(intensity) {
-	}
-	virtual ~Light() = default;
 	DirectX::XMFLOAT3 color;
 	float intensity;
+	DirectX::XMFLOAT3 direction;
 };
 
-class DirectionalLight : public Light
+struct DirectionalLightCBVInfo
 {
-public:
-	DirectionalLight(const DirectX::XMFLOAT3& dir, DirectX::XMFLOAT3 color, float intensity)
-		: Light(color, intensity), direction(dir) {
-	}
+	D3D12_CPU_DESCRIPTOR_HANDLE HandleCPU;
+	D3D12_GPU_DESCRIPTOR_HANDLE HandleGPU;
+	DirectionalLightConstants* pBuffer;
+	ComPtr<ID3D12Resource> buffer;
+};
+
+struct DirectionalLight
+{
+	DirectionalLight(uint32_t framecount = 2)
+		: direction(0.0f, -1.0f, 0.0f),
+		color(1.0f, 1.0f, 1.0f),
+		intensity(1.0f),
+		cbv(framecount)
+	{}
 	DirectX::XMFLOAT3 direction;
-	LightType GetLightType() const {
-		return LightType::Directional;
-	}
-	DirectX::XMFLOAT3 GetDirection() const {
-		return direction;
-	}
-	void SetDirection(const DirectX::XMFLOAT3& dir) {
-		direction = dir;
-	}
+	DirectX::XMFLOAT3 color;
+	float intensity;
+	std::vector<DirectionalLightCBVInfo> cbv;
+};
+
+struct alignas(256) PointLight
+{
+	DirectX::XMFLOAT3 color;
+	float intensity;
+	DirectX::XMFLOAT3 position;
+	float range;
+};
+
+struct alignas(256) SpotLight
+{
+	DirectX::XMFLOAT3 color;
+	float intensity;
+	DirectX::XMFLOAT3 position;
+	DirectX::XMFLOAT3 direction;
+	float range;
+	float innerAngle;
 };

@@ -25,6 +25,7 @@ private:
 	Scene* mainScene;
 	ResourceManager* m_resourceManager;
 	bool InitApp();
+	void InitSceneLights();
 	void TermApp();
 	void MainLoop();
 	void UpdateObjects();

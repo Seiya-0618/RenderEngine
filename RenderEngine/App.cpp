@@ -50,9 +50,24 @@ bool App::InitApp()
 	const wchar_t* modelPath = L"SampleObj/Sample.obj";
 	m_resourceManager->LoadModel(modelPath);
 	m_renderer->OnInit();
+	InitSceneLights();
 
 
 	return true;
+}
+
+void App::InitSceneLights()
+{
+	DirectionalLight light;
+	light.direction = DirectX::XMFLOAT3(0.5f, -1.0f, 0.5f);
+	light.color = DirectX::XMFLOAT3(0.75f, 0.5f, 0.0f);
+	light.intensity = 1.0f;
+	bool flag = mainScene->addDirectionalLight(light);
+	if (flag)
+	{
+		DirectionalLight* dirLight = mainScene->directionalLights[0].get();
+		m_renderer->CreateDirectionalLightConstantBuffer(dirLight);
+	}
 }
 
 void App::TermApp()
@@ -71,6 +86,7 @@ void App::MainLoop()
 			mainScene->UpdateWorldTransforms();
 			m_renderer->UpdateCameraConstants();
 			m_renderer->UpdateObjectConstants();
+			m_renderer->UpdateDirectionalLightConstants();
 			m_renderer->Render();
 		}
 	}
