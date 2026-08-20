@@ -2,12 +2,14 @@ struct VSInput
 {
     float3 Position : POSITION;
     float2 TexCoord : TEXCOORD;
+    float3 Normal : NORMAL;
 };
 
 struct VSOutput
 {
     float4 Position : SV_POSITION;
     float2 TexCoord : TEXCOORD;
+    float3 Normal : NORMAL;
 };
 
 cbuffer CameraTransform : register(b0)
@@ -29,9 +31,11 @@ VSOutput main(VSInput input)
     float4 worldPos = mul(World, localPos);
     float4 viewPos = mul(View, worldPos);
     float4 projPos = mul(Projection, viewPos);
+    float3 worldNormal = mul((float3x3) World, input.Normal);
     
     output.Position = projPos;
     output.TexCoord = input.TexCoord;
+    output.Normal = worldNormal.xyz;
 
     return output;
 }

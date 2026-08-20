@@ -4,11 +4,23 @@
 #include <wrl.h>
 #include <vector>
 
+/*
+Parameter order
+Position
+Direction
+Color 
+Intensity
+Range
+*/
+
 struct alignas(256) DirectionalLightConstants
 {
-	DirectX::XMFLOAT3 color;
-	float intensity;
 	DirectX::XMFLOAT3 direction;
+	float padding0;
+	DirectX::XMFLOAT3 color;
+	float padding1;
+	float intensity;
+	float padding2[3];
 };
 
 struct DirectionalLightCBVInfo
@@ -35,18 +47,25 @@ struct DirectionalLight
 
 struct alignas(256) PointLight
 {
-	DirectX::XMFLOAT3 color;
-	float intensity;
 	DirectX::XMFLOAT3 position;
+	float padding0;
+	DirectX::XMFLOAT3 color;
+	float padding1;
+	float intensity;
+	float padding2[3];
+
 	float range;
 };
 
 struct alignas(256) SpotLight
 {
-	DirectX::XMFLOAT3 color;
-	float intensity;
 	DirectX::XMFLOAT3 position;
+	float padding0;
 	DirectX::XMFLOAT3 direction;
+	float padding1;
+	DirectX::XMFLOAT3 color;
+	float padding2;
+	float intensity;
 	float range;
 	float innerAngle;
 };

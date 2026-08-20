@@ -59,8 +59,8 @@ bool App::InitApp()
 void App::InitSceneLights()
 {
 	DirectionalLight light;
-	light.direction = DirectX::XMFLOAT3(0.5f, -1.0f, 0.5f);
-	light.color = DirectX::XMFLOAT3(0.75f, 0.5f, 0.0f);
+	light.direction = DirectX::XMFLOAT3(0.5f, -0.5f, 1.0f);
+	light.color = DirectX::XMFLOAT3(1.0f, 1.0f, 1.0f);
 	light.intensity = 1.0f;
 	bool flag = mainScene->addDirectionalLight(light);
 	if (flag)
