@@ -45,27 +45,32 @@ struct DirectionalLight
 	std::vector<DirectionalLightCBVInfo> cbv;
 };
 
-struct alignas(256) PointLight
+struct alignas(256) PointLightConstants
 {
 	DirectX::XMFLOAT3 position;
 	float padding0;
+
 	DirectX::XMFLOAT3 color;
 	float padding1;
-	float intensity;
-	float padding2[3];
 
+	float intensity;
 	float range;
+	float padding2[2];
 };
 
-struct alignas(256) SpotLight
+struct alignas(256) SpotLightConstants
 {
 	DirectX::XMFLOAT3 position;
 	float padding0;
+
 	DirectX::XMFLOAT3 direction;
 	float padding1;
+
 	DirectX::XMFLOAT3 color;
 	float padding2;
+
 	float intensity;
 	float range;
 	float innerAngle;
+	float pading3;
 };

@@ -26,11 +26,16 @@
 - ✅ Camera 用 ConstantBuffer を分離
 - ✅ ObjectConstants を World のみへ整理
 - ✅ CameraConstants を導入して Camera 行列を別 CB で管理
+- ✅ DirectionalLight の定義
+- ✅ Scene による DirectionalLight 保持
+- ✅ Light 用 ConstantBuffer の作成
+- ✅ DirectionalLight の CPU -> GPU 更新経路を追加
+- ✅ BasicLighting 相当のライティング描画を導入（実装は Lambert ベース）
 
 ## 現在の課題
 - Material の質感パラメータは保持しているが、描画にはまだ十分反映されていない
-- Lambert / Phong など追加 PSO は作成できるが、ライティング用パラメータ整理はこれから
-- Light の定義は着手したが、描画系への統合は未完了
+- BasicLighting は導入したが、見た目改善はまだ限定的で、Phong などを含む発展形はこれから
+- Light は DirectionalLight 前提の最小実装に留まっている
 - Renderer, Scene, Object, ResourceManager の責務分担がまだ曖昧
 - Scene 内の Object 管理が `vector + id/index map` 前提になっており、削除時の再構築や責務整理が必要
 - 複数 PSO / Material を前提にした描画順整理（バケット化）が未実装
@@ -60,9 +65,9 @@
 
 ### 4. Light の導入
 - [x] DirectionalLight の定義を作成する
-- [ ] Scene に Light を保持する形へ整理する
-- [ ] Light 用 ConstantBuffer を作成する
-- [ ] Lambert で Light を使ったライティングを行う
+- [x] Scene に Light を保持する形へ整理する
+- [x] Light 用 ConstantBuffer を作成する
+- [x] BasicLighting で Light を使ったライティングを行う
 
 ### 5. 最低限の整理
 - [ ] Transform 定義の整理
@@ -80,9 +85,9 @@
 4. Camera 用 ConstantBuffer の分離
 
 ### Phase 2
-5. Lambert など追加 PSO の導入
+5. BasicLighting 系 PSO の導入
 6. Light / Material 用 ConstantBuffer の整理
-7. Lambert へのライト反映
+7. BasicLighting へのライト反映
 8. Material パラメータの描画反映
 9. RootSignature の共有範囲整理
 
