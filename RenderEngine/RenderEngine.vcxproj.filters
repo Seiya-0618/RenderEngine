@@ -88,10 +88,10 @@
     <FxCompile Include="SimpleTexPS.hlsl">
       <Filter>リソース ファイル</Filter>
     </FxCompile>
-    <FxCompile Include="LambertVS.hlsl">
+    <FxCompile Include="BasicLightingVS.hlsl">
       <Filter>リソース ファイル</Filter>
     </FxCompile>
-    <FxCompile Include="LambertPS.hlsl">
+    <FxCompile Include="BasicLightingPS.hlsl">
       <Filter>リソース ファイル</Filter>
     </FxCompile>
   </ItemGroup>

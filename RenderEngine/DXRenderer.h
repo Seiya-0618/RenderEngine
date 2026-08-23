@@ -45,10 +45,8 @@ public:
 	~DXRenderer();
 	bool InitD3D(HWND hwnd);
 	bool OnInit();
-	//bool CreatePipelineStateObject();
 	bool CreateBasicPSO();
-	bool CreateLambertPSO();
-	bool CreatePhongPSO();
+	bool CreateBasicLightingPSO();
 	bool CreateConstantBuffer(UINT CBSize, CBV_data(&cbvData)[FrameCount]);
 	bool CreateObjectConstantBuffer(Object* obj);
 	bool CreateCameraConstantBuffer(Camera* camera);

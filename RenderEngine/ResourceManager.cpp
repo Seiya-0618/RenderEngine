@@ -160,7 +160,7 @@ Object* ResourceManager::LoadModel(const wchar_t* filepath)
 			{
 				std::cout << "No diffuse texture found for material index: " << materialIndex << std::endl;
 			}
-			DXMaterial newMat(PipelineKey::Lambert, meshObject->GetTextureName(), 0.5f, 0.5f);
+			DXMaterial newMat(PipelineKey::BasicLighting, meshObject->GetTextureName(), 0.5f, 0.5f);
 			uint32_t materialID = m_pScene->AddMaterial(std::make_unique<DXMaterial>(newMat));
 			meshObject->materialIndex = materialID;
 				
@@ -257,13 +257,6 @@ Texture* ResourceManager::LoadTexture(const wchar_t* filepath)
 	srvDesc.Texture2D.MipLevels = texDesc.MipLevels;
 	srvDesc.Texture2D.PlaneSlice = 0;
 	srvDesc.Texture2D.ResourceMinLODClamp = 0.0f;
-	/*
-	m_pDevice->CreateShaderResourceView(
-		loadedtexture->resource.Get(),
-		&srvDesc,
-		loadedtexture->handleCPU
-	);
-	*/
 	ComPtr<ID3D12Resource> uploadHeap;
 	UINT64 uploadBufferSize = GetRequiredIntermediateSize(loadedtexture->resource.Get(), 0, 1);
 	D3D12_RESOURCE_DESC uploadDesc = CD3DX12_RESOURCE_DESC::Buffer(uploadBufferSize);

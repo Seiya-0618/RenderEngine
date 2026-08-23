@@ -429,8 +429,8 @@ bool DXRenderer::OnInit()
 
 	bool flag = CreateBasicPSO();
 	std::cout << "CreateBasicPSO() result: " << flag << std::endl;
-	flag = CreateLambertPSO();
-	std::cout << "CreateLambertPSO() result: " << flag << std::endl;
+	flag = CreateBasicLightingPSO();
+	std::cout << "CreateBasicLightingPSO() result: " << flag << std::endl;
 
 	{
 		//Viewport and ScissorRect
@@ -553,7 +553,7 @@ bool DXRenderer::CreateBasicPSO()
 	return true;
 }
 
-bool DXRenderer::CreateLambertPSO()
+bool DXRenderer::CreateBasicLightingPSO()
 {
 	D3D12_INPUT_ELEMENT_DESC elements[3] = {};
 	elements[0].SemanticName = "POSITION";
@@ -612,17 +612,17 @@ bool DXRenderer::CreateLambertPSO()
 	ComPtr<ID3DBlob> pVSBlob;
 	ComPtr<ID3DBlob> pPSBlob;
 
-	auto hr = D3DReadFileToBlob(L"LambertVS.cso", pVSBlob.GetAddressOf());
+	auto hr = D3DReadFileToBlob(L"BasicLightingVS.cso", pVSBlob.GetAddressOf());
 	if (FAILED(hr))
 	{
-		std::cout << "Failed to load lambert vertex shader." << std::endl;
+		std::cout << "Failed to load BasicLighting vertex shader." << std::endl;
 		return false;
 	}
 
-	hr = D3DReadFileToBlob(L"LambertPS.cso", pPSBlob.GetAddressOf());
+	hr = D3DReadFileToBlob(L"BasicLightingPS.cso", pPSBlob.GetAddressOf());
 	if (FAILED(hr))
 	{
-		std::cout << "Failed to load lambert pixel shader." << std::endl;
+		std::cout << "Failed to load BasicLighting pixel shader." << std::endl;
 		return false;
 	}
 
@@ -648,12 +648,11 @@ bool DXRenderer::CreateLambertPSO()
     hr = m_pDevice->CreateGraphicsPipelineState(&descPSO, IID_PPV_ARGS(pPSO.GetAddressOf()));
 	if (FAILED(hr))
 	{
-		std::cout << "Failed to create Lambert Pipeline State Object. hr=0x"
+		std::cout << "Failed to create BasicLighting Pipeline State Object. hr=0x"
 		<< std::hex << hr << std::dec << std::endl;
 		return false;
 	}
-	m_PSOMap[PipelineKey::Lambert] = pPSO;
-
+	m_PSOMap[PipelineKey::BasicLighting] = pPSO;
 	return true;
 }
 

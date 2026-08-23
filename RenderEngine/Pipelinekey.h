@@ -4,6 +4,5 @@
 enum class PipelineKey : uint32_t
 {
 	Basic,
-	Lambert,
-	Phong
+	BasicLighting
 };
