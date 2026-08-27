@@ -3,7 +3,6 @@
 #include <vector>
 #include <d3d12.h>
 #include <DirectXMath.h>
-//#include "DXMaterial.h"
 #include <wrl/client.h>
 
 template<typename T> using ComPtr = Microsoft::WRL::ComPtr<T>;
@@ -13,7 +12,6 @@ template<typename T> using ComPtr = Microsoft::WRL::ComPtr<T>;
 struct Vertex
 {
 	DirectX::XMFLOAT3 position;
-	//DirectX::XMFLOAT4 color;
 	DirectX::XMFLOAT2 uv;
 	DirectX::XMFLOAT3 normal;
 	DirectX::XMFLOAT3 tangent;
@@ -55,14 +53,12 @@ struct ObjectTransform
 struct alignas(256) ObjectConstants
 {
 	DirectX::XMMATRIX World;
-	//DirectX::XMMATRIX View;
-	//DirectX::XMMATRIX Projection;
 };
 
 struct ObjectCBVInfo {
-	D3D12_GPU_DESCRIPTOR_HANDLE HandleGPU;
-	D3D12_CPU_DESCRIPTOR_HANDLE HandleCPU;
-	ObjectConstants* pBuffer;
+	D3D12_GPU_DESCRIPTOR_HANDLE HandleGPU{};
+	D3D12_CPU_DESCRIPTOR_HANDLE HandleCPU{};
+	ObjectConstants* pBuffer = nullptr;
 	ComPtr<ID3D12Resource> buffer;
 };
 

@@ -1,6 +1,5 @@
 #pragma once
 
-//#include <Windows.h>
 #include <cstdint>
 #include "Window.h"
 #include "DXRenderer.h"

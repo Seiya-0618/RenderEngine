@@ -791,8 +791,6 @@ void DXRenderer::UpdateObjectConstants()
 			continue;
 		}
 		obj->cbv[m_FrameIndex].pBuffer->World = obj->worldMatrix;
-		//obj->cbv[m_FrameIndex].pBuffer->View = view;
-		//obj->cbv[m_FrameIndex].pBuffer->Projection = proj;
 	}
 }
 

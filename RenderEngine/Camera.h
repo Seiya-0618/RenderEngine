@@ -9,9 +9,9 @@ struct alignas(256) CameraConstants
 
 struct CameraCBVInfo
 {
-    D3D12_CPU_DESCRIPTOR_HANDLE HandleCPU;
-    D3D12_GPU_DESCRIPTOR_HANDLE HandleGPU;
-    CameraConstants* pBuffer;
+    D3D12_CPU_DESCRIPTOR_HANDLE HandleCPU{};
+    D3D12_GPU_DESCRIPTOR_HANDLE HandleGPU{};
+    CameraConstants* pBuffer = nullptr;
     ComPtr<ID3D12Resource> buffer;
 };
 
@@ -22,11 +22,14 @@ public:
         : position(0.0f, 1.0f, -2.0f),
         target(0.0f, 0.8f, 0.0f),
         up(0.0f, 1.0f, 0.0f),
+		viewport({ 0.0f, 0.0f, 800.0f, 600.0f, 0.0f, 1.0f }),
+		scissorRect({ 0, 0, 800, 600 }),
         aspectRatio(aspect),
         nearPlane(nearZ),
         farPlane(farZ),
         cbv(frameCount)
     {
+        
     }
 
     DirectX::XMMATRIX GetViewMatrix() const {

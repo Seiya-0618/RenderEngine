@@ -13,6 +13,8 @@ Mesh squareMesh = {
 };
 
 Object::Object()
+	:objectID(-1),
+	materialIndex(-1)
 {
 	worldMatrix = DirectX::XMMatrixIdentity();
 	/* Do Nothing */
@@ -62,7 +64,6 @@ bool Object::AddMesh(Mesh mesh, ID3D12Device* device)
 			std::cout << "Failed to create vertex buffer.HRESULT: 0x" << std::hex << hr << std::endl;
 			return false;
 		}
-		//vertexBuffers.push_back(std::move(vertexbuffer)); //‚Ù‚ñ‚Æ‚É‚±‚ê‚Å‚¦‚¦‚ñ‚©H
 		void* ptr = nullptr;
 		hr = vertexbuffer->Map(0, nullptr, &ptr);
 		if (FAILED(hr))

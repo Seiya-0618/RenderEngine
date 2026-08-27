@@ -6,8 +6,6 @@
 #include "Camera.h"
 #include "DXMaterial.h"
 #include "Light.h"
-//#include "ModelLoader.h"
-//#include "ResourceManager.h"
 
 class Scene
 {
@@ -21,13 +19,11 @@ public:
 	std::unordered_map<std::wstring, std::unique_ptr<Texture>> textureMap;
 	std::unordered_map<uint32_t, std::unique_ptr<DXMaterial>> materialMap;
 
-	//std::map<uint32_t, std::unique_ptr<DirectionalLight>> directionalLights;
 	std::vector<std::unique_ptr<DirectionalLight>> directionalLights;
 	std::vector<Camera*> cameras;
 	size_t mainCameraIndex;
 
 	void addCamera(Camera* camera);
-	//void removeCamera(Camera* camera);
 	bool removeCamera(Camera* camera);
 	void addObject(Object* object);
 	void removeObject(Object* object);

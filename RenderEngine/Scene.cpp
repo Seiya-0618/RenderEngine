@@ -2,9 +2,17 @@
 
 Scene::Scene(float camwidth, float camheight, float camnear, float camfar)
 	:objects(),
+	objectIDs(),
+	objectIDMap(),
 	rootobjectIDMap(),
-	objectIDCounter(0)
-	//rootObjectIDCounter(0)
+	textureMap(),
+	materialMap(),
+	directionalLights(),
+	cameras(),
+	mainCameraIndex(0),
+	objectIDCounter(0),
+	materialIDCounter(0),
+	directionalLightIDCounter(0)
 {
 	cameras.push_back(new Camera(camwidth / camheight, camnear, camfar));
 	mainCameraIndex = cameras.size() - 1;
@@ -51,7 +59,6 @@ bool Scene::removeCamera(Camera* camera)
 
 void Scene::addObject(Object* object)
 {
-	//objects.insert({ objectIDCounter, object });
 	uint32_t id = objectIDCounter;
 	size_t index = objects.size();
 	objects.push_back(object);

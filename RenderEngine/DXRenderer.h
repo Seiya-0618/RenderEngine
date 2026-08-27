@@ -67,7 +67,6 @@ public:
 	ID3D12DescriptorHeap* GetCBV_SRV_UAVHeap() const { return m_pHeapCBV_SRV_UAV.Get(); }
 
 private:
-	//static const uint32_t FrameCount = 2;
 	static const uint32_t maxCBVCount = 1000;
 	static const uint32_t maxTextureCount = 100;
 
