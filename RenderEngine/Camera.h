@@ -5,6 +5,8 @@ struct alignas(256) CameraConstants
 {
     DirectX::XMMATRIX View;
     DirectX::XMMATRIX Projection;
+    DirectX::XMFLOAT3 Position;
+    float Padding;
 };
 
 struct CameraCBVInfo
@@ -46,6 +48,10 @@ public:
         return DirectX::XMMatrixPerspectiveFovRH(
             fovY, aspectRatio, nearPlane, farPlane
         );
+    }
+
+    DirectX::XMFLOAT3 GetPosition() const {
+        return position;
     }
 
     // 必要に応じてカメラ位置やターゲットを変更可能

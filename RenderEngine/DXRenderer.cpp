@@ -798,9 +798,11 @@ void DXRenderer::UpdateCameraConstants()
 {
 	DirectX::XMMATRIX view = m_Scene->GetMainCameraViewMatrix();
 	DirectX::XMMATRIX proj = m_Scene->GetMainCameraProjectionMatrix();
+	DirectX::XMFLOAT3 position = m_Scene->GetMainCameraPosition();
 	Camera* camera = m_Scene->cameras[m_Scene->mainCameraIndex];
 	camera->cbv[m_FrameIndex].pBuffer->View = view;
 	camera->cbv[m_FrameIndex].pBuffer->Projection = proj;
+	camera->cbv[m_FrameIndex].pBuffer->Position = position;
 }
 
 void DXRenderer::UpdateLightConstants()

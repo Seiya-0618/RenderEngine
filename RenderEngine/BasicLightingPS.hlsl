@@ -3,6 +3,8 @@ struct VSOutput
     float4 Position : SV_POSITION;
     float2 TexCoord : TEXCOORD;
     float3 Normal : NORMAL;
+    float3 worldPosition : WORLDPOSITION;
+    float3 viewDirection : VIEWDIRECTION;
 };
 
 struct PSOutput
@@ -24,13 +26,27 @@ PSOutput main (VSOutput input)
 {
     PSOutput output = (PSOutput) 0;
     float ambientIntensity = 0.2f;
-    output.Color = ColorMap.Sample(ColorSmp, input.TexCoord);
-    float4 tex = ColorMap.Sample(ColorSmp, input.TexCoord);
-    output.Color.r = tex.r;
+    
+    // Albedo Color
+    output.Color.rgb = ColorMap.Sample(ColorSmp, input.TexCoord);
     output.Color.a = 1.0f;
-    float3 normal = input.Normal;
+    
+    // Lighting Lambert
+    float3 normal = normalize(input.Normal);
     float3 lightDir = normalize(-LightDirection);
     float diffuse = max(dot(normal, lightDir), 0.0f);
-    output.Color.rgb *= (1.0f - ambientIntensity) * (LightColor * diffuse * LightIntensity) + ambientIntensity;
+    float3 lambert = (LightColor * diffuse * LightIntensity);
+    
+    // Lighting Phong
+    
+    float3 reflectdir = reflect(-lightDir, normal);
+    float3 viewDir = normalize(input.viewDirection);
+    float intensity = max(0.0f, dot(reflectdir, viewDir));
+    float3 phongColor = float3(1.0f, 1.0f, 1.0f);
+    float3 phong = (phongColor * pow(intensity, 25.0f));
+    
+    // Output color with lighting
+    output.Color.rgb *= (1.0f - ambientIntensity) * lambert + ambientIntensity + phong;
+    
     return output;
 }

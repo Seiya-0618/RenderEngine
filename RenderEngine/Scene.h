@@ -34,6 +34,7 @@ public:
 	bool changeMainCamera(size_t index);
 	DirectX::XMMATRIX GetMainCameraViewMatrix();
 	DirectX::XMMATRIX GetMainCameraProjectionMatrix();
+	DirectX::XMFLOAT3 GetMainCameraPosition();
 	void AddTexture(const std::wstring& name, std::unique_ptr<Texture> texture);
 	Texture* GetTexture(const std::wstring& filepath);
 	uint32_t AddMaterial(std::unique_ptr<DXMaterial> material);

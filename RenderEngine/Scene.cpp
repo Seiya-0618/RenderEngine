@@ -159,6 +159,17 @@ DirectX::XMMATRIX Scene::GetMainCameraProjectionMatrix()
 	}
 }
 
+DirectX::XMFLOAT3 Scene::GetMainCameraPosition()
+{
+	if (mainCameraIndex < cameras.size()) {
+		return cameras[mainCameraIndex]->GetPosition();
+	}
+	else {
+		std::cout << "Main camera index is out of range." << std::endl;
+		return DirectX::XMFLOAT3(0.0f, 0.0f, 0.0f);
+	}
+}
+
 void Scene::AddTexture(const std::wstring& name, std::unique_ptr<Texture> texture)
 {
 	if (textureMap.find(name) != textureMap.end())
