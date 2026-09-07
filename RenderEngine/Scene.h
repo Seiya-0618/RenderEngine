@@ -17,6 +17,9 @@ public:
 	std::map<uint32_t, uint32_t> objectIDMap;    //objectID, index
 	std::map<uint32_t, uint32_t> rootobjectIDMap;
 	std::unordered_map<std::wstring, std::unique_ptr<Texture>> textureMap;
+	std::unordered_map<std::wstring, std::unique_ptr<Texture>> NormalMapMap;
+	std::unordered_map<std::wstring, std::unique_ptr<Texture>> RoughnessMapMap;
+	std::unordered_map<std::wstring, std::unique_ptr<Texture>> MetallicMapMap;
 	std::unordered_map<uint32_t, std::unique_ptr<DXMaterial>> materialMap;
 
 	std::vector<std::unique_ptr<DirectionalLight>> directionalLights;

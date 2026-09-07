@@ -48,6 +48,7 @@ bool App::InitApp()
 		mainScene
 	);
 	const wchar_t* modelPath = L"SampleObj/Sample.obj";
+	m_resourceManager->CreateFallbackTextures();
 	m_resourceManager->LoadModel(modelPath);
 	m_renderer->OnInit();
 	InitSceneLights();

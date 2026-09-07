@@ -10,6 +10,7 @@
 #include "DXMaterial.h"
 #include "FileUtil.h"
 #include "Scene.h"
+#include <DirectXTex.h>
 
 template<typename T> using ComPtr = Microsoft::WRL::ComPtr<T>;
 
@@ -23,7 +24,7 @@ struct LoadedModel
 struct PendingTextureUpload
 {
 	ComPtr<ID3D12Resource> uploadBuffer;
-	std::wstring filepath;
+	std::wstring name;
 };
 
 class ResourceManager
@@ -34,7 +35,9 @@ public:
 
 	Object* LoadModel(const wchar_t* filepath);
 	Texture* LoadTexture(const wchar_t* filepath);
+	std::unique_ptr<Texture> CreateTextureResource(DirectX::ScratchImage& image, std::wstring name);
 	void UploadLoadedTextures();
+	bool CreateFallbackTextures();
 
 	LoadedModel* GetLoadedModel(const std::wstring& filepath);
 	Texture* GetLoadedTexture(const std::wstring& filepath);

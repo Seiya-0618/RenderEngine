@@ -203,7 +203,6 @@ Texture* ResourceManager::LoadTexture(const wchar_t* filepath)
 
 	std::wcout << L" Loaded texture at : " << path.c_str() << std::endl;
 
-	auto loadedtexture = std::make_unique<Texture>();
 	DirectX::TexMetadata metadata = {};
 	DirectX::ScratchImage image = {};
 	HRESULT hr = DirectX::LoadFromWICFile(
@@ -216,7 +215,18 @@ Texture* ResourceManager::LoadTexture(const wchar_t* filepath)
 		std::cout << "Failed to load texture file: " << path.c_str() << std::endl;
 		return nullptr;
 	}
+	std::unique_ptr<Texture> textureResource = CreateTextureResource(image, filename);
+	Texture* texPtr = textureResource.get();
+	m_pScene->AddTexture(filename, std::move(textureResource));
+
+	return texPtr;
+}
+
+std::unique_ptr<Texture> ResourceManager::CreateTextureResource(DirectX::ScratchImage& image, std::wstring name)
+{
 	auto img = image.GetImage(0, 0, 0);
+	auto metadata = image.GetMetadata();
+	auto texture = std::make_unique<Texture>();
 	D3D12_RESOURCE_DESC texDesc = {};
 	D3D12_HEAP_PROPERTIES texProps = {};
 	texDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
@@ -235,14 +245,13 @@ Texture* ResourceManager::LoadTexture(const wchar_t* filepath)
 	texProps.Type = D3D12_HEAP_TYPE_DEFAULT;
 	texProps.CreationNodeMask = 0;
 	texProps.VisibleNodeMask = 0;
-
-	hr = m_pDevice->CreateCommittedResource(
+	auto hr = m_pDevice->CreateCommittedResource(
 		&texProps,
 		D3D12_HEAP_FLAG_NONE,
 		&texDesc,
 		D3D12_RESOURCE_STATE_COPY_DEST,
 		nullptr,
-		IID_PPV_ARGS(loadedtexture->resource.GetAddressOf())
+		IID_PPV_ARGS(texture->resource.GetAddressOf())
 	);
 	if (FAILED(hr))
 	{
@@ -258,7 +267,7 @@ Texture* ResourceManager::LoadTexture(const wchar_t* filepath)
 	srvDesc.Texture2D.PlaneSlice = 0;
 	srvDesc.Texture2D.ResourceMinLODClamp = 0.0f;
 	ComPtr<ID3D12Resource> uploadHeap;
-	UINT64 uploadBufferSize = GetRequiredIntermediateSize(loadedtexture->resource.Get(), 0, 1);
+	UINT64 uploadBufferSize = GetRequiredIntermediateSize(texture->resource.Get(), 0, 1);
 	D3D12_RESOURCE_DESC uploadDesc = CD3DX12_RESOURCE_DESC::Buffer(uploadBufferSize);
 	CD3DX12_HEAP_PROPERTIES uploadProps(D3D12_HEAP_TYPE_UPLOAD);
 	hr = m_pDevice->CreateCommittedResource(
@@ -274,7 +283,6 @@ Texture* ResourceManager::LoadTexture(const wchar_t* filepath)
 		std::cout << "Failed to create upload heap for texture." << std::endl;
 		return nullptr;
 	}
-
 	D3D12_SUBRESOURCE_DATA subresourcedata = {};
 	subresourcedata.pData = img->pixels;
 	subresourcedata.RowPitch = img->rowPitch;
@@ -282,7 +290,7 @@ Texture* ResourceManager::LoadTexture(const wchar_t* filepath)
 
 	UINT64 result = UpdateSubresources(
 		m_pCommandList.Get(),
-		loadedtexture->resource.Get(),
+		texture->resource.Get(),
 		uploadHeap.Get(),
 		0, 0, 1,
 		&subresourcedata
@@ -293,7 +301,7 @@ Texture* ResourceManager::LoadTexture(const wchar_t* filepath)
 		return nullptr;
 	}
 	CD3DX12_RESOURCE_BARRIER barrier = CD3DX12_RESOURCE_BARRIER::Transition(
-		loadedtexture->resource.Get(),
+		texture->resource.Get(),
 		D3D12_RESOURCE_STATE_COPY_DEST,
 		D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE
 	);
@@ -302,29 +310,24 @@ Texture* ResourceManager::LoadTexture(const wchar_t* filepath)
 
 	auto srvHandleCPU = m_pSrvHeap->GetCPUDescriptorHandleForHeapStart();
 	srvHandleCPU.ptr += incrementSize * (maxCBVCount + SRVDescriptorIndex);
-	loadedtexture->handleCPU = srvHandleCPU;
+	texture->handleCPU = srvHandleCPU;
 	auto srvHandleGPU = m_pSrvHeap->GetGPUDescriptorHandleForHeapStart();
 	srvHandleGPU.ptr += incrementSize * (maxCBVCount + SRVDescriptorIndex);
-	loadedtexture->handleGPU = srvHandleGPU;
+	texture->handleGPU = srvHandleGPU;
 
 	m_pDevice->CreateShaderResourceView(
-		loadedtexture->resource.Get(),
+		texture->resource.Get(),
 		&srvDesc,
-		loadedtexture->handleCPU
+		texture->handleCPU
 	);
 
 	SRVDescriptorIndex++;
 
-
 	PendingTextureUpload pending;
 	pending.uploadBuffer = uploadHeap;
-	pending.filepath = path;
+	pending.name = name;
 	m_pendingTextureUploads.push_back(pending);
-
-	Texture* texPtr = loadedtexture.get();
-	m_pScene->AddTexture(filename, std::move(loadedtexture));
-
-	return texPtr;
+	return texture;
 }
 
 void ResourceManager::UploadLoadedTextures()
@@ -343,6 +346,46 @@ void ResourceManager::UploadLoadedTextures()
 	m_pCommandList->Reset(m_pCommandAllocator.Get(), nullptr);
 }
 
+bool ResourceManager::CreateFallbackTextures()
+{
+
+	struct FallbackTexture
+	{
+		uint8_t data[4];
+		std::wstring name;
+	};
+	FallbackTexture textures[] =
+	{
+		{ { 128, 128, 255, 255 }, L"Fallback_Normal" },
+		{ { 255, 255, 255, 255 }, L"Fallback_Roughness" },
+		{ { 0, 0, 0, 255 }, L"Fallback_Metallic" }
+	};
+	for (auto& texture : textures)
+	{
+		DirectX::ScratchImage image = {};
+		HRESULT hr = image.Initialize2D(
+			DXGI_FORMAT_R8G8B8A8_UNORM,
+			1, 1, 1, 1
+		);
+		if (FAILED(hr))
+		{
+			std::cout << "Failed to initialize fallback texture:" << texture.name.c_str() << std::endl;
+		}
+		memcpy(image.GetPixels(),
+			texture.data,
+			sizeof(texture.data)
+		);
+		auto textureResource = CreateTextureResource(image, texture.name);
+		if (textureResource == nullptr)
+		{
+			std::cout << "Failed to create fallback texture: " << texture.name.c_str() << std::endl;
+			return false;
+		}
+		m_pScene->AddTexture(texture.name, std::move(textureResource));
+	}
+	UploadLoadedTextures();
+	return true;
+};
 
 LoadedModel* ResourceManager::GetLoadedModel(const std::wstring& filepath)
 {

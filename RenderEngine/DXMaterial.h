@@ -29,8 +29,8 @@ public:
 		float Metallic)
 		:m_PipelineKey(pipelineKey),
 		DiffuseMapName(texturename),
-		Roughness(Roughness),
-		Metallic(Metallic)
+		RoughnessMapName(),
+		MetallicMapName()
 	{
 	}
 	~DXMaterial()
@@ -42,10 +42,11 @@ public:
 	}
 
 	PipelineKey m_PipelineKey;
-	std::wstring DiffuseMapName;
 	std::vector<uint32_t> InheritedObjectIDs;
-	float Roughness;
-	float Metallic;
+	std::wstring DiffuseMapName;
+	std::wstring NormalMapName;
+	std::wstring RoughnessMapName;
+	std::wstring MetallicMapName;
 
 
 private:

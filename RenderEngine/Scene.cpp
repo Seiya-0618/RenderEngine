@@ -180,6 +180,8 @@ void Scene::AddTexture(const std::wstring& name, std::unique_ptr<Texture> textur
 	textureMap[name] = std::move(texture);
 }
 
+
+
 Texture* Scene::GetTexture(const std::wstring& filepath)
 {
 	auto it = textureMap.find(filepath);
