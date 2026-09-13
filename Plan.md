@@ -28,48 +28,49 @@
 - ✅ BasicLighting への Phong 成分追加
 - ✅ テクスチャ作成処理の共通化
 - ✅ Diffuse 以外のマップ用フォールバックテクスチャ作成
+- ✅ Material 単位の Albedo / Normal / MR テクスチャ参照
+- ✅ Normal / MR のフォールバックテクスチャ割り当て
+- ✅ Material 単位の 3 スロット SRV テーブル作成
+- ✅ Albedo / Normal / MR の連続した DescriptorTable 配置
+- ✅ Material から DescriptorTable の GPU ハンドルを Renderer へ渡す経路
+- ✅ t0 / t1 / t2 のテクスチャバインド確認
 
 ## 現在の課題
 
-- PBR 用の Material テクスチャスロットが未整理
-- Diffuse / Normal / Roughness / Metallic の SRV テーブルが未実装
-- PBR 用 RootSignature とシェーダーが未実装
-- Normal Map を使用するための Tangent 情報が未対応
-- Renderer / Scene / ResourceManager 間のリソース管理ルールを明文化する必要がある
+- PBR 用の PSO とシェーダーが未実装
+- Normal Map を使用するための Tangent 空間処理が未実装
+- MR テクスチャをライティング計算へ反映していない
 - 複数 Material / PSO を前提とした描画順整理は未実装
 
 ## PBR 実装計画
 
 ### 1. Material とテクスチャ参照
 
-- [x] Diffuse 以外の不足マップ用フォールバックテクスチャを作成する
-- [x] 通常テクスチャとフォールバックテクスチャの作成処理を共通化する
-- [ ] Material が Diffuse / Normal / Roughness / Metallic の参照名を保持する
-- [ ] テクスチャは `std::wstring` の名前で検索する
-- [ ] ResourceManager がテクスチャを読み込み、Material の各マップ名を設定する
-- [ ] 存在しないマップには対応するフォールバックテクスチャ名を設定する
+- [x] Material が Albedo / Normal / MR の参照名を保持する
+- [x] テクスチャを `std::wstring` の名前で検索する
+- [x] ResourceManager がテクスチャを読み込み、Material の各マップ名を設定する
+- [x] 不足する Normal / MR にフォールバックテクスチャ名を設定する
+- [x] Material はテクスチャリソースを直接保持せず、参照名を保持する
 
-Material はテクスチャリソースを直接保持せず、マップ名を保持する。
-実際のテクスチャは ResourceManager または Scene のテクスチャ管理から名前検索で取得する。
+テクスチャは ResourceManager が作成し、Scene に登録する。
+Material はマップ名を保持し、ResourceManager または Scene のテクスチャ管理から名前で解決する。
 
-### 2. SRV テーブルと RootSignature
+### 2. SRV テーブル
 
-- [ ] Diffuse / Normal / Roughness / Metallic の固定スロット順を定義する
-- [ ] Material ごとの SRV ディスクリプタテーブルを作成する
-- [ ] PBR 用 RootSignature に対応する descriptor range を定義する
-- [ ] PS から固定されたレジスタ順で各テクスチャを参照する
+- [x] Albedo / Normal / MR の固定スロット順を定義する
+- [x] Material ごとの SRV ディスクリプタテーブルを作成する
+- [x] 3 要素の SRV descriptor range を定義する
+- [x] Material から DescriptorTable の GPU ハンドルを渡す
+- [x] t0 / t1 / t2 のテクスチャバインドを確認する
+- [ ] PBR シェーダーで t0 / t1 / t2 を使用する
 
-担当範囲:
+固定スロット:
 
-- ResourceManager:
-  - テクスチャの読み込み
-  - SRV の作成
-  - Material 用 SRV テーブルの構築
-- Renderer:
-  - RootSignature / PSO の定義
-  - 描画時のディスクリプタテーブルバインド
-
-SRV テーブルのスロット順と RootSignature の descriptor range は共通の仕様として管理する。
+| スロット |       用途        |   ResourceBinding   |
+|:--:|:-------------:|:-----------------:|
+| t0 | Albedo テクスチャ | `Material.Albedo` |
+| t1 | Normal テクスチャ | `Material.Normal` |
+| t2 | MR テクスチャ   | `Material.MR`    |
 
 ### 3. PBR シェーダー
 
