@@ -15,8 +15,8 @@ template<typename T> using ComPtr = Microsoft::WRL::ComPtr<T>;
 struct alignas(256) MaterialConstants
 {
 	DirectX::XMFLOAT4 BaseColor;
-	float Roughness;
-	float Metallic;
+	float Roughness=1.0;
+	float Metallic=0.0;
 	float Padding[2];
 };
 
@@ -24,13 +24,11 @@ class DXMaterial
 {
 public:
 	DXMaterial(PipelineKey pipelineKey,
-		std::wstring texturename,
-		float Roughness,
-		float Metallic)
+		std::wstring texturename)
 		:m_PipelineKey(pipelineKey),
 		DiffuseMapName(texturename),
-		RoughnessMapName(),
-		MetallicMapName()
+		NormalMapName(L"Fallback_Normal"),
+		MRMapName(L"Fallback_MR")
 	{
 	}
 	~DXMaterial()
@@ -45,9 +43,8 @@ public:
 	std::vector<uint32_t> InheritedObjectIDs;
 	std::wstring DiffuseMapName;
 	std::wstring NormalMapName;
-	std::wstring RoughnessMapName;
-	std::wstring MetallicMapName;
-
+	std::wstring MRMapName;
+	D3D12_GPU_DESCRIPTOR_HANDLE MaterialTexHandle;
 
 private:
 	ComPtr<ID3D12RootSignature> m_pRootSignature;

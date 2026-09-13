@@ -169,6 +169,7 @@
     <ClInclude Include="Light.h" />
     <ClInclude Include="Object_win.h" />
     <ClInclude Include="Pipelinekey.h" />
+    <ClInclude Include="RenderConfig.h" />
     <ClInclude Include="ResourceManager.h" />
     <ClInclude Include="Scene.h" />
     <ClInclude Include="Window.h" />

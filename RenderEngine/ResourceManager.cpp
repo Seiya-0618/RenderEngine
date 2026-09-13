@@ -23,11 +23,12 @@ std::wstring GetFileNameFromPath(const std::wstring& path)
 	return path;
 }
 
-ResourceManager::ResourceManager(ID3D12Device* device, ID3D12DescriptorHeap* heap, ID3D12CommandQueue* queue, Scene* scene)
+ResourceManager::ResourceManager(ID3D12Device* device, ID3D12DescriptorHeap* heap, ID3D12CommandQueue* queue, Scene* scene, const RenderConfig& config)
 	:m_pDevice(device),
 	m_pSrvHeap(heap),
 	m_pCommandQueue(queue),
-	m_pScene(scene)
+	m_pScene(scene),
+	m_config(config)
 {
 	HRESULT hr = m_pDevice->CreateCommandAllocator(
 		D3D12_COMMAND_LIST_TYPE_DIRECT,
@@ -160,7 +161,31 @@ Object* ResourceManager::LoadModel(const wchar_t* filepath)
 			{
 				std::cout << "No diffuse texture found for material index: " << materialIndex << std::endl;
 			}
-			DXMaterial newMat(PipelineKey::BasicLighting, meshObject->GetTextureName(), 0.5f, 0.5f);
+			DXMaterial newMat(PipelineKey::BasicLighting, meshObject->GetTextureName());
+			// Load Normal Map
+			aiString normalPath;
+			if (material->GetTexture(aiTextureType_NORMALS, 0, &normalPath) == AI_SUCCESS)
+			{
+				std::string normalPath_str = normalPath.C_Str();
+				std::wstring normalPathW(normalPath_str.begin(), normalPath_str.end());
+				Texture* normalmap = LoadTexture(normalPathW.c_str());
+				if (normalmap == nullptr)
+				{
+					std::cout << "Failed to load normalMap: " << normalPath.C_Str() << std::endl;
+				}
+				else
+				{
+					std::wstring normalmapname = GetFileNameFromPath(normalPathW);
+					newMat.NormalMapName = normalmapname;
+				}
+			}
+			// Load Metallic Roughness map
+			// Œ»ƒo[ƒWƒ‡ƒ“‚Å“Ç‚Ýž‚ß‚È‚¢‚½‚ß–³‚µ
+			if (!CreateMaterialDescriptorTable(&newMat))
+			{
+				std::cout << "Failed to create material" << std::endl;
+				return nullptr;
+			}
 			uint32_t materialID = m_pScene->AddMaterial(std::make_unique<DXMaterial>(newMat));
 			meshObject->materialIndex = materialID;
 				
@@ -258,14 +283,6 @@ std::unique_ptr<Texture> ResourceManager::CreateTextureResource(DirectX::Scratch
 		std::cout << "Failed to create texture resource." << std::endl;
 		return nullptr;
 	}
-	D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
-	srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
-	srvDesc.Format = texDesc.Format;
-	srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
-	srvDesc.Texture2D.MostDetailedMip = 0;
-	srvDesc.Texture2D.MipLevels = texDesc.MipLevels;
-	srvDesc.Texture2D.PlaneSlice = 0;
-	srvDesc.Texture2D.ResourceMinLODClamp = 0.0f;
 	ComPtr<ID3D12Resource> uploadHeap;
 	UINT64 uploadBufferSize = GetRequiredIntermediateSize(texture->resource.Get(), 0, 1);
 	D3D12_RESOURCE_DESC uploadDesc = CD3DX12_RESOURCE_DESC::Buffer(uploadBufferSize);
@@ -306,28 +323,54 @@ std::unique_ptr<Texture> ResourceManager::CreateTextureResource(DirectX::Scratch
 		D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE
 	);
 	m_pCommandList->ResourceBarrier(1, &barrier);
-	UINT incrementSize = m_pDevice->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
-
-	auto srvHandleCPU = m_pSrvHeap->GetCPUDescriptorHandleForHeapStart();
-	srvHandleCPU.ptr += incrementSize * (maxCBVCount + SRVDescriptorIndex);
-	texture->handleCPU = srvHandleCPU;
-	auto srvHandleGPU = m_pSrvHeap->GetGPUDescriptorHandleForHeapStart();
-	srvHandleGPU.ptr += incrementSize * (maxCBVCount + SRVDescriptorIndex);
-	texture->handleGPU = srvHandleGPU;
-
-	m_pDevice->CreateShaderResourceView(
-		texture->resource.Get(),
-		&srvDesc,
-		texture->handleCPU
-	);
-
-	SRVDescriptorIndex++;
 
 	PendingTextureUpload pending;
 	pending.uploadBuffer = uploadHeap;
 	pending.name = name;
 	m_pendingTextureUploads.push_back(pending);
 	return texture;
+}
+
+void ResourceManager::CreateTextureSRV(Texture* texture, uint32_t descriptorIndex)
+{
+	D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
+	srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+	srvDesc.Format = texture->resource->GetDesc().Format;
+	srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+	srvDesc.Texture2D.MostDetailedMip = 0;
+	srvDesc.Texture2D.MipLevels = texture->resource->GetDesc().MipLevels;
+	srvDesc.Texture2D.PlaneSlice = 0;
+	srvDesc.Texture2D.ResourceMinLODClamp = 0.0f;
+	UINT incrementSize = m_pDevice->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+	auto srvHandleCPU = m_pSrvHeap->GetCPUDescriptorHandleForHeapStart();
+	srvHandleCPU.ptr += incrementSize * (descriptorIndex + maxCBVCount * m_config.frameCount);
+	m_pDevice->CreateShaderResourceView(
+		texture->resource.Get(),
+		&srvDesc,
+		srvHandleCPU
+	);
+}
+
+bool ResourceManager::CreateMaterialDescriptorTable(DXMaterial* material)
+{
+	Texture* diffuseMap = m_pScene->GetTexture(material->DiffuseMapName);
+	Texture* normalMap = m_pScene->GetTexture(material->NormalMapName);
+	Texture* mrMap = m_pScene->GetTexture(material->MRMapName);
+	if (diffuseMap == nullptr || normalMap == nullptr || mrMap == nullptr)
+	{
+		std::cout << "Failed to create material descriptor table: One or more textures are missing." << std::endl;
+		return false;
+	}
+	uint32_t startdescriptorIndex = SRVDescriptorIndex;
+	CreateTextureSRV(diffuseMap, startdescriptorIndex);
+	CreateTextureSRV(normalMap, startdescriptorIndex + 1);
+	CreateTextureSRV(mrMap, startdescriptorIndex + 2);
+	SRVDescriptorIndex += 3;
+	UINT incrementSize = m_pDevice->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+	auto srvHandleGPU = m_pSrvHeap->GetGPUDescriptorHandleForHeapStart();
+	srvHandleGPU.ptr += incrementSize * ( startdescriptorIndex + maxCBVCount * m_config.frameCount);
+	material->MaterialTexHandle = srvHandleGPU;
+	return true;
 }
 
 void ResourceManager::UploadLoadedTextures()
@@ -357,8 +400,7 @@ bool ResourceManager::CreateFallbackTextures()
 	FallbackTexture textures[] =
 	{
 		{ { 128, 128, 255, 255 }, L"Fallback_Normal" },
-		{ { 255, 255, 255, 255 }, L"Fallback_Roughness" },
-		{ { 0, 0, 0, 255 }, L"Fallback_Metallic" }
+		{ { 0, 192, 0, 255 }, L"Fallback_MR" },
 	};
 	for (auto& texture : textures)
 	{

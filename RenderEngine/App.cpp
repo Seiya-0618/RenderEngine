@@ -1,4 +1,5 @@
 #include "App.h"
+#include "RenderConfig.h"
 
 
 App::App(uint32_t width, uint32_t height)
@@ -38,6 +39,8 @@ bool App::InitApp()
 	{
 		return false;
 	}
+	RenderConfig config;
+	config.frameCount = 2;
 
 	m_window->Show();
 	m_renderer->InitD3D(m_window->GetHwnd());
@@ -45,7 +48,8 @@ bool App::InitApp()
 		m_renderer->GetDevice(),
 		m_renderer->GetCBV_SRV_UAVHeap(),
 		m_renderer->GetCommandQueue(),
-		mainScene
+		mainScene,
+		config
 	);
 	const wchar_t* modelPath = L"SampleObj/Sample.obj";
 	m_resourceManager->CreateFallbackTextures();

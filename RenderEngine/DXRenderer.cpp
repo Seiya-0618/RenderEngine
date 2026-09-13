@@ -346,25 +346,25 @@ bool DXRenderer::OnInit()
 
 		D3D12_ROOT_PARAMETER rootParam[4] = {};
 		rootParam[0].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;  //Camera CBV
-		rootParam[0].Descriptor.ShaderRegister = 0;
+		rootParam[0].Descriptor.ShaderRegister = 0;		//b0
 		rootParam[0].Descriptor.RegisterSpace = 0;
 		rootParam[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
 
 		rootParam[1].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;  //Object CBV
-		rootParam[1].Descriptor.ShaderRegister = 1;
+		rootParam[1].Descriptor.ShaderRegister = 1;		//b1
 		rootParam[1].Descriptor.RegisterSpace = 0;
 		rootParam[1].ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
 
 		rootParam[2].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV; //Light CBV
-		rootParam[2].Descriptor.ShaderRegister = 2;
+		rootParam[2].Descriptor.ShaderRegister = 2;		//b2
 		rootParam[2].Descriptor.RegisterSpace = 0;
 		rootParam[2].ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
 
 		D3D12_DESCRIPTOR_RANGE range = {};
 		range.RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
-		range.NumDescriptors = 1;
-		range.BaseShaderRegister = 0;
-		//range.RegisterSpace = 0;
+		range.NumDescriptors = 3;
+		range.BaseShaderRegister = 0;		//s0
+		range.RegisterSpace = 0;
 		range.OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
 
 		rootParam[3].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
@@ -873,7 +873,7 @@ void DXRenderer::Render()
 				if (tex)
 				{
 					m_pCmdList->SetGraphicsRootConstantBufferView(1, obj->cbv[m_FrameIndex].buffer->GetGPUVirtualAddress()); //Object CBV
-					m_pCmdList->SetGraphicsRootDescriptorTable(3, tex->handleGPU);
+					m_pCmdList->SetGraphicsRootDescriptorTable(3, mat->MaterialTexHandle);
 					m_pCmdList->IASetVertexBuffers(0, 1, &obj->vertexBuffers[0].view);
 					m_pCmdList->IASetIndexBuffer(&obj->indexBuffers[0].view);
 					UINT indexCount = obj->indexBuffers[0].view.SizeInBytes / sizeof(uint32_t);

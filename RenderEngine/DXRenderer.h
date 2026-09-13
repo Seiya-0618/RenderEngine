@@ -17,6 +17,7 @@
 #include <cassert>
 #include <DirectXTex.h>
 #include "PipelineKey.h"
+#include "RenderConfig.h"
 
 #pragma comment(lib, "d3d12.lib")
 #pragma comment(lib, "dxgi.lib")
@@ -68,7 +69,7 @@ public:
 
 private:
 	static const uint32_t maxCBVCount = 1000;
-	static const uint32_t maxTextureCount = 100;
+	static const uint32_t maxTextureCount = 1000;
 
 
 

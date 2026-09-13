@@ -10,6 +10,7 @@
 #include "DXMaterial.h"
 #include "FileUtil.h"
 #include "Scene.h"
+#include "RenderConfig.h"
 #include <DirectXTex.h>
 
 template<typename T> using ComPtr = Microsoft::WRL::ComPtr<T>;
@@ -30,12 +31,14 @@ struct PendingTextureUpload
 class ResourceManager
 {
 public:
-	ResourceManager(ID3D12Device* device, ID3D12DescriptorHeap* heap, ID3D12CommandQueue* queue, Scene* scene);
+	ResourceManager(ID3D12Device* device, ID3D12DescriptorHeap* heap, ID3D12CommandQueue* queue, Scene* scene, const RenderConfig& config);
 	~ResourceManager();
 
 	Object* LoadModel(const wchar_t* filepath);
 	Texture* LoadTexture(const wchar_t* filepath);
 	std::unique_ptr<Texture> CreateTextureResource(DirectX::ScratchImage& image, std::wstring name);
+	void CreateTextureSRV(Texture* texture, uint32_t descriptorIdex);
+	bool CreateMaterialDescriptorTable(DXMaterial* material);
 	void UploadLoadedTextures();
 	bool CreateFallbackTextures();
 
@@ -47,6 +50,7 @@ public:
 	void ClearResources();
 
 private:
+	const RenderConfig& m_config;
 	ID3D12Device* m_pDevice;
 	Scene* m_pScene;
 	ID3D12DescriptorHeap* m_pSrvHeap;
@@ -60,7 +64,6 @@ private:
 	static constexpr const wchar_t* TEXTURE_DIRECTORY = L"res/SampleTex/";
 	size_t CBVDescriptorIndex = 0;
 	size_t SRVDescriptorIndex = 0;
-
 	bool BasicPSOCreated = false;
 
 	std::unordered_map<std::wstring, std::unique_ptr<LoadedModel>> m_loadedModels;
